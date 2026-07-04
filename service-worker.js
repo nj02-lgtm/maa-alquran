@@ -9,7 +9,7 @@
  * works whether the site lives at a domain root (https://example.com/) or in
  * a subfolder (https://user.github.io/repo/) — no editing needed either way.
  */
-const CACHE = 'maa-alquran-shell-v1';
+const CACHE = 'maa-alquran-shell-v2';
 const ROOT = new URL('./', self.location).href;   // e.g. https://user.github.io/repo/
 const PAGE_URL = ROOT;                              // the app's start page
 const SHELL = [
