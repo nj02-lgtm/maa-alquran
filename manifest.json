@@ -1,0 +1,32 @@
+{
+  "name": "مع القرآن - تلاوة وحفظ",
+  "short_name": "مع القرآن",
+  "description": "حفظ ومراجعة القرآن الكريم مع التلاوة — يعمل دون اتصال بعد تنزيل المحتوى. Memorize and review the Qur'an with recitation; works offline after downloading content.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1e4e7a",
+  "theme_color": "#1e4e7a",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
