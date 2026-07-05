@@ -17,7 +17,8 @@ const SHELL = [
   ROOT + 'manifest.json',
   ROOT + 'icons/icon-192.png',
   ROOT + 'icons/icon-512.png',
-  ROOT + 'icons/icon-maskable-512.png'
+  ROOT + 'icons/icon-maskable-512.png',
+  ROOT + 'icons/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {
