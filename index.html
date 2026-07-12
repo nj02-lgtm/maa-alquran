@@ -278,6 +278,7 @@ body.dark .goal-note{background:#1c2a38;border-color:#33485d;color:#aebfd0}
     .logo-ar{font-family:'Amiri Quran','Amiri','Scheherazade New',serif;font-size:11px;font-weight:700;color:#e6d6a8;letter-spacing:.4px;line-height:1.3;margin-top:-4px;}
     .nav{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
     .nav-item{padding:10px 12px;border-radius:8px;font-size:13px;display:flex;align-items:center;cursor:pointer;transition:background .15s;}
+    a.nav-item{color:inherit;text-decoration:none;}
     .nav-item.active{background:rgba(248,250,252,.12);}
     .nav-item:hover{background:rgba(248,250,252,.08);}
     .dlp-grid{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0;}
@@ -1110,12 +1111,12 @@ body.dark .tafsir-selector-row label {
 <div class="mob-nav-overlay" id="mobNavOverlay"></div>
 <div class="mob-nav-drawer" id="mobNavDrawer">
   <button class="mob-nav-close" id="mobNavClose" aria-label="إغلاق / Close">✕</button>
-  <div class="nav-item" data-mob-nav="dashboard"><div><div class="nav-label-main">لوحة المتابعة</div><div class="nav-label-sub">Dashboard</div></div></div>
+  <div class="nav-item" data-mob-nav="settings"><div><div class="nav-label-main">الإعدادات</div><div class="nav-label-sub">Settings &amp; More</div></div></div>
   <div class="nav-item" data-mob-nav="memorized"><div><div class="nav-label-main">الصفحات المحفوظة</div><div class="nav-label-sub">Memorized Pages</div></div></div>
   <div class="nav-item" data-mob-nav="download"><div><div class="nav-label-main">تحميل البرنامج</div><div class="nav-label-sub">Download</div></div></div>
   <div class="nav-item" data-mob-nav="offline"><div><div class="nav-label-main">⬇️ التنزيل دون اتصال</div><div class="nav-label-sub">Offline Downloads</div></div></div>
   <div class="nav-item" data-mob-nav="contact"><div><div class="nav-label-main">📧 تواصل معنا</div><div class="nav-label-sub">Contact us</div></div></div>
-  <div class="nav-item" data-mob-nav="settings"><div><div class="nav-label-main">الإعدادات</div><div class="nav-label-sub">Settings &amp; More</div></div></div>
+  <a class="nav-item" href="privacy.html" target="_blank" rel="noopener"><div><div class="nav-label-main">🔒 سياسة الخصوصية</div><div class="nav-label-sub">Privacy Policy</div></div></a>
 </div>
 
 <div class="app">
@@ -1125,12 +1126,12 @@ body.dark .tafsir-selector-row label {
       <div class="logo-ar">مع القرآن — تلاوة وحفظ</div>
     </div>
     <nav class="nav">
-      <div class="nav-item active" data-nav="dashboard"><div><div class="nav-label-main">لوحة المتابعة</div><div class="nav-label-sub">Dashboard</div></div></div>
+      <div class="nav-item" data-nav="settings"><div><div class="nav-label-main">الإعدادات</div><div class="nav-label-sub">Settings &amp; More</div></div></div>
       <div class="nav-item" data-nav="memorized"><div><div class="nav-label-main">الصفحات المحفوظة</div><div class="nav-label-sub">Memorized Pages</div></div></div>
       <div class="nav-item" data-nav="download"><div><div class="nav-label-main">تحميل البرنامج</div><div class="nav-label-sub">Download</div></div></div>
       <div class="nav-item" data-nav="offline"><div><div class="nav-label-main">⬇️ التنزيل دون اتصال</div><div class="nav-label-sub">Offline Downloads</div></div></div>
       <div class="nav-item" data-nav="contact"><div><div class="nav-label-main">📧 تواصل معنا</div><div class="nav-label-sub">Contact us</div></div></div>
-      <div class="nav-item" data-nav="settings"><div><div class="nav-label-main">الإعدادات</div><div class="nav-label-sub">Settings &amp; More</div></div></div>
+      <a class="nav-item" href="privacy.html" target="_blank" rel="noopener"><div><div class="nav-label-main">🔒 سياسة الخصوصية</div><div class="nav-label-sub">Privacy Policy</div></div></a>
     </nav>
     <div class="sidebar-footer">نسخة تفاعلية — Student Manager<br/>بيانات كل طالب محفوظة محلياً</div>
   </aside>
@@ -3980,15 +3981,42 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .surah-sep-name{white-space:nowrap;font-size:clamp(15px,5.2vw,25px);}
   .surah-sep-basmala{white-space:nowrap;font-size:clamp(12px,4.3vw,21px);}
 
-  /* Audio bar on phones: two tidy rows — reciter+Play+Stop on the first,
-     the Repeat and Word-practice buttons flowing to the second. The native
-     player stays hidden (Play/Stop drive it). */
-  .page-modal-audio{padding:6px 10px !important;gap:4px !important;}
-  .page-modal-audio #reciterSelect{flex:1 1 120px;min-width:100px;}
-  .page-modal-audio .mushaf-nav-btn{flex:0 0 auto;font-size:11px;padding:5px 8px;}
-  .page-modal-audio .word-practice-btn{font-size:11px;padding:5px 8px;}
+  /* Audio bar on phones: reciter gets its own full-width row, then Play/Stop
+     sit side by side, then Memorize/Repeat sit side by side below them — a
+     2-column grid so every button gets equal room and can wrap to two lines
+     instead of being clipped. The native player stays hidden (Play/Stop
+     drive it). */
+  .page-modal-audio{padding:6px 10px !important;gap:6px !important;}
+
+  .page-modal-audio .pma-row1{flex-wrap:wrap;gap:6px !important;}
+  .page-modal-audio #reciterSelect{
+    flex:1 1 100% !important;width:100% !important;
+    order:-1;                       /* reciter select always on its own top row */
+  }
+  .page-modal-audio .audio-label{display:none;}   /* 🎧 icon: redundant once reciter has its own row */
+
+  .page-modal-audio #stopPlaybackBtn,
+  .page-modal-audio #playPageBtn,
+  .page-modal-audio #wordPracticeBtn,
+  .page-modal-audio #repeatModeBtn{
+    flex:1 1 calc(50% - 3px) !important;
+    min-width:0;
+    height:auto !important;
+    min-height:34px;
+    white-space:normal !important;   /* let long bilingual labels wrap to 2 lines instead of clipping */
+    line-height:1.25;
+    font-size:11px !important;
+    padding:6px 4px !important;
+    text-align:center;
+  }
+  /* Play before Stop (reading order matches the visual left-to-right pair) */
+  .page-modal-audio #playPageBtn{order:1;}
+  .page-modal-audio #stopPlaybackBtn{order:2;}
+  .page-modal-audio #wordPracticeBtn{order:3;}
+  .page-modal-audio #repeatModeBtn{order:4;}
+
   .page-modal-audio #pageAudioPlayer{display:none !important;}
-  .page-modal-audio #playbackStatus{flex:1 1 100%;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;}
+  .page-modal-audio #playbackStatus{flex:1 1 100%;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;order:5;}
 
   .mushaf-page-wrap:not([data-page="1"]):not([data-page="2"]) .mushaf-word{
     font-size:var(--mushaf-fs,15px) !important;
