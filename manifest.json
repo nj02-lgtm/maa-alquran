@@ -4,10 +4,10 @@
   "description": "حفظ ومراجعة القرآن الكريم مع التلاوة — يعمل دون اتصال بعد تنزيل المحتوى. Memorize and review the Qur'an with recitation; works offline after downloading content.",
   "lang": "ar",
   "dir": "rtl",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#1e4e7a",
+  "background_color": "#f5e9d3",
   "theme_color": "#1e4e7a",
   "icons": [
     {
@@ -28,5 +28,17 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "orientation": "any",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "id": "/",
+  "categories": [
+    "books",
+    "education",
+    "lifestyle"
   ]
 }
