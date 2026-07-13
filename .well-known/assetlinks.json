@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.maalquran.twa",
+        "sha256_cert_fingerprints": ["32:63:71:3C:FB:F1:CF:DD:7A:A8:E4:38:AE:5C:14:65:FE:26:AB:4E:C0:B9:2A:28:DA:76:C8:7D:74:8B:7B:C9"]
+      }
+    }]
