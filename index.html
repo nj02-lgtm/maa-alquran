@@ -1819,7 +1819,7 @@ function populateReciterSelects(){
         const os = document.getElementById(other);
         if(os && os!==e.target) os.value = currentReciter;
       });
-      if(e.target.id==='sReciter' && typeof showToast==='function') showToast('تم حفظ القارئ ✅');
+      if(e.target.id==='sReciter' && typeof showToast==='function') showToast('تم حفظ القارئ ✅ / Reciter saved');
     };
   });
 }
@@ -1864,8 +1864,8 @@ async function getAudioUrl(surah, ayah, folder){
   function loadStudentData(name){const stored=localStorage.getItem(STORAGE_PREFIX+name);if(stored){try{memorization=JSON.parse(stored);for(let j=1;j<=30;j++){if(!memorization[j])memorization[j]={};for(let pg of JUZ_PAGE_RANGES[j-1].pages)if(!memorization[j][pg])memorization[j][pg]='white';}}catch(e){memorization=getDefaultData();saveCurrentStudent();}}else{memorization=getDefaultData();saveCurrentStudent();}renderAllAfterLoad();}
   function saveCurrentStudent(){if(currentStudent)localStorage.setItem(STORAGE_PREFIX+currentStudent,JSON.stringify(memorization));}
   function populateStudentSelect(){const sel=document.getElementById('studentSelect');sel.innerHTML='';getStudentList().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});if(currentStudent)sel.value=currentStudent;}
-  function addNewStudent(){let n=prompt('أدخل اسم الطالب الجديد / Enter new student name:');if(!n||!n.trim())return;n=n.trim().substring(0,60);if(getStudentList().includes(n)){alert('هذا الاسم موجود بالفعل');return;}localStorage.setItem(STORAGE_PREFIX+n,JSON.stringify(getDefaultData()));currentStudent=n;loadStudentData(n);populateStudentSelect();document.getElementById('studentSelect').value=n;localStorage.setItem('quran_current_student',n);showToast(`تم إضافة "${n}" بنجاح`);}
-  function deleteCurrentStudent(){const s=getStudentList();if(s.length<=1){alert('لا يمكن حذف آخر طالب');return;}if(!confirm(`حذف "${currentStudent}" نهائياً؟`))return;localStorage.removeItem(STORAGE_PREFIX+currentStudent);const r=getStudentList();currentStudent=r[0];localStorage.setItem('quran_current_student',currentStudent);populateStudentSelect();loadStudentData(currentStudent);showToast('تم حذف الطالب');}
+  function addNewStudent(){let n=prompt('أدخل اسم الطالب الجديد / Enter new student name:');if(!n||!n.trim())return;n=n.trim().substring(0,60);if(getStudentList().includes(n)){alert('هذا الاسم موجود بالفعل / This name already exists');return;}localStorage.setItem(STORAGE_PREFIX+n,JSON.stringify(getDefaultData()));currentStudent=n;loadStudentData(n);populateStudentSelect();document.getElementById('studentSelect').value=n;localStorage.setItem('quran_current_student',n);showToast(`تم إضافة "${n}" بنجاح / "${n}" added successfully`);}
+  function deleteCurrentStudent(){const s=getStudentList();if(s.length<=1){alert('لا يمكن حذف آخر طالب / Cannot delete the last student');return;}if(!confirm(`حذف "${currentStudent}" نهائياً؟ / Permanently delete "${currentStudent}"?`))return;localStorage.removeItem(STORAGE_PREFIX+currentStudent);const r=getStudentList();currentStudent=r[0];localStorage.setItem('quran_current_student',currentStudent);populateStudentSelect();loadStudentData(currentStudent);showToast('تم حذف الطالب / Student deleted');}
   function switchStudent(n){if(n===currentStudent)return;currentStudent=n;localStorage.setItem('quran_current_student',n);loadStudentData(n);}
   function showToast(msg,dur=2200){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 
@@ -1886,7 +1886,7 @@ async function getAudioUrl(surah, ayah, folder){
   document.getElementById('tafsirPanelAyah').textContent = `سورة ${si.ar} — آية ${ayahNum} | صفحة ${page}`;
 
   if(currentTafsir.id === 'none'){
-    body.innerHTML = '<div class="tafsir-placeholder"><div class="tafsir-placeholder-icon">📖</div><div>اختر تفسيراً من القائمة أعلاه</div></div>';
+    body.innerHTML = '<div class="tafsir-placeholder"><div class="tafsir-placeholder-icon">📖</div><div>اختر تفسيراً من القائمة أعلاه</div><div style="font-size:11px;opacity:.7;">Choose a tafsir from the list above</div></div>';
     return;
   }
   body.innerHTML = '<div class="tafsir-loading">⏳ جاري تحميل التفسير...</div>';
@@ -2078,7 +2078,7 @@ function startPagePlayback(startKey) {
   
   const wrap = document.querySelector('.mushaf-page-wrap');
   if (!wrap) {
-    showToast('لم يتم تحميل الصفحة بعد');
+    showToast('لم يتم تحميل الصفحة بعد / Page not loaded yet');
     return;
   }
   
@@ -2096,7 +2096,7 @@ function startPagePlayback(startKey) {
   });
   
   if (orderedKeys.length === 0) {
-    showToast('لا توجد آيات في هذه الصفحة');
+    showToast('لا توجد آيات في هذه الصفحة / No verses on this page');
     return;
   }
   
@@ -2578,7 +2578,7 @@ window.navigateModal = function(delta) {
       const weakCnt=weakSetFor(pg).size;
       const weakTag=weakCnt?`<span class="weak-strip" title="${weakCnt} كلمات تحتاج تدريباً — اضغط لفتح الصفحة / words to practice — click to open"></span>`:'';
       cell.innerHTML=`<div class="open-page-icon" role="button"></div>${weakTag}<div class="page-number">${pg}</div>${sh}`;
-      const tog=()=>{const cur=memorization[juz][pg]||'white';const nxt=cur==='white'?'yellow':(cur==='yellow'?'green':'white');memorization[juz][pg]=nxt;saveCurrentStudent();renderGrid(juz);renderCompactSummary();updateTotalCards();showToast(`ص ${pg} → ${{white:'غير محفوظ',yellow:'حفظ خفيف 🟡',green:'حفظ قوي 🟢'}[nxt]}`);};
+      const tog=()=>{const cur=memorization[juz][pg]||'white';const nxt=cur==='white'?'yellow':(cur==='yellow'?'green':'white');memorization[juz][pg]=nxt;saveCurrentStudent();renderGrid(juz);renderCompactSummary();updateTotalCards();showToast(`ص / Page ${pg} → ${{white:'غير محفوظ / Not memorized',yellow:'حفظ خفيف 🟡 / Light',green:'حفظ قوي 🟢 / Strong'}[nxt]}`);};
       cell.title='اضغط لتغيير مستوى الحفظ / Click to change memorization level';
       cell.querySelector('.open-page-icon').title='فتح الصفحة / Open page';
       cell.addEventListener('click',e=>{if(e.target.closest('.open-page-icon')||e.target.closest('.weak-strip'))return;tog();});
@@ -2613,8 +2613,8 @@ window.navigateModal = function(delta) {
   }
   function updateTotalCards(){let s=0,l=0;for(let j=1;j<=30;j++)for(let pg in memorization[j]){const v=memorization[j][pg];if(v==='green')s++;if(v==='yellow')l++;}document.getElementById('strongCount').textContent=s;document.getElementById('lightCount').textContent=l;document.getElementById('remainingPages').textContent=604-(s+l);if(typeof checkGoalReminders==='function')checkGoalReminders();}
   function buildJuzSelectorOptions(){const s=document.getElementById('juzSelect');s.innerHTML='';for(let j=1;j<=30;j++){const o=document.createElement('option');o.value=j;o.textContent=`الجزء ${j} (ص ${JUZ_PAGE_RANGES[j-1].start}–${JUZ_PAGE_RANGES[j-1].end})`;s.appendChild(o);}s.value=currentJuz;s.onchange=e=>{currentJuz=parseInt(e.target.value);renderGrid(currentJuz);renderCompactSummary()};}
-  function applyBulkLevel(){const sel=document.getElementById('bulkLevelSelect');const lvl=sel.value;const txt=sel.options[sel.selectedIndex].textContent;if(!confirm(`تطبيق "${txt}" على كافة صفحات الجزء ${currentJuz}؟`))return;for(let pg of JUZ_PAGE_RANGES[currentJuz-1].pages)memorization[currentJuz][pg]=lvl;saveCurrentStudent();renderGrid(currentJuz);renderCompactSummary();updateTotalCards();showToast(`تم تطبيق ${txt} على الجزء ${currentJuz}`);}
-  function resetCurrentStudentData(){if(!confirm(`⚠️ مسح كافة بيانات "${currentStudent}"؟ لا يمكن التراجع!`))return;memorization=getDefaultData();saveCurrentStudent();renderAllAfterLoad();showToast('تم إعادة تعيين البيانات');}
+  function applyBulkLevel(){const sel=document.getElementById('bulkLevelSelect');const lvl=sel.value;const txt=sel.options[sel.selectedIndex].textContent;if(!confirm(`تطبيق "${txt}" على كافة صفحات الجزء ${currentJuz}؟ / Apply "${txt}" to all pages of Juz ${currentJuz}?`))return;for(let pg of JUZ_PAGE_RANGES[currentJuz-1].pages)memorization[currentJuz][pg]=lvl;saveCurrentStudent();renderGrid(currentJuz);renderCompactSummary();updateTotalCards();showToast(`تم تطبيق ${txt} على الجزء ${currentJuz} / Applied to Juz ${currentJuz}`);}
+  function resetCurrentStudentData(){if(!confirm(`⚠️ مسح كافة بيانات "${currentStudent}"؟ لا يمكن التراجع! / Erase all data for "${currentStudent}"? This cannot be undone!`))return;memorization=getDefaultData();saveCurrentStudent();renderAllAfterLoad();showToast('تم إعادة تعيين البيانات / Data has been reset');}
   function renderAllAfterLoad(){renderGrid(currentJuz);renderCompactSummary();updateTotalCards();if(typeof checkGoalReminders==='function')checkGoalReminders();}
   /* Mobile quick-jump: first page not yet memorized (white), else first needing review (yellow). */
   window.jumpToFirstUnmemorized=function(){
@@ -3482,8 +3482,8 @@ document.getElementById('gSaveBtn').addEventListener('click',()=>{
   const date=document.getElementById('gDate').value;
   const remindRaw=parseInt(document.getElementById('gRemind').value);
   const remindDays=isNaN(remindRaw)?7:Math.max(0,Math.min(365,remindRaw));
-  if(!name){ showToast('⚠️ أدخل اسم الهدف'); return; }
-  if(isNaN(from)||isNaN(to)){ showToast('⚠️ أدخل رقم الصفحة'); return; }
+  if(!name){ showToast('⚠️ أدخل اسم الهدف / Enter a goal name'); return; }
+  if(isNaN(from)||isNaN(to)){ showToast('⚠️ أدخل رقم الصفحة / Enter page numbers'); return; }
   from=Math.max(1,Math.min(604,from)); to=Math.max(1,Math.min(604,to));
   if(from>to){ const t=from; from=to; to=t; }   // swap if reversed
   const goals=_getGoals();
@@ -3492,7 +3492,7 @@ document.getElementById('gSaveBtn').addEventListener('click',()=>{
   document.getElementById('gName').value='';
   renderGoals();
   checkGoalReminders();
-  showToast('تم حفظ الهدف ✅');
+  showToast('تم حفظ الهدف ✅ / Goal saved');
 });
 
 function renderGoals(){
@@ -3534,7 +3534,7 @@ function renderGoals(){
       </div>`;
 
     card.querySelector('.goal-del-btn').addEventListener('click',()=>{
-      if(!confirm(`حذف هدف "${g.name}"؟`)) return;
+      if(!confirm(`حذف هدف "${g.name}"؟ / Delete goal "${g.name}"?`)) return;
       _saveGoals(_getGoals().filter(x=>x.id!==g.id));
       renderGoals();
       checkGoalReminders();
@@ -3675,7 +3675,7 @@ document.getElementById('sImportFile').addEventListener('change',e=>{
       const data=JSON.parse(ev.target.result);
       if(!data.students) throw new Error('invalid format');
       const count=Object.keys(data.students).length;
-      if(!confirm(`استيراد ${count} طالب؟ سيتم دمج البيانات مع الموجود.`)) return;
+      if(!confirm(`استيراد ${count} طالب؟ سيتم دمج البيانات مع الموجود. / Import ${count} student(s)? Data will be merged with existing records.`)) return;
       Object.entries(data.students).forEach(([name,mem])=>{
         localStorage.setItem(STORAGE_PREFIX+name,JSON.stringify(mem));
       });
@@ -3693,7 +3693,7 @@ document.getElementById('sImportFile').addEventListener('change',e=>{
 
 // Clear all
 document.getElementById('sClearBtn').addEventListener('click',()=>{
-  if(!confirm('⚠️ حذف جميع بيانات جميع الطلاب نهائياً؟\nهذا الإجراء لا يمكن التراجع عنه!')) return;
+  if(!confirm('⚠️ حذف جميع بيانات جميع الطلاب نهائياً؟ هذا الإجراء لا يمكن التراجع عنه!\nPermanently delete ALL data for ALL students? This cannot be undone!')) return;
   getStudentList().forEach(s=>localStorage.removeItem(STORAGE_PREFIX+s));
   localStorage.removeItem('quran_current_student');
   location.reload();
