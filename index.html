@@ -1537,7 +1537,7 @@ body.dark .tafsir-selector-row label {
 
       <p class="dlp-note dlp-note-win">🪟 <b>ويندوز:</b> اضغط زر Windows لتنزيل المثبّت <b>«مع القرآن - تلاوة وحفظ.exe»</b>. شغّله بنقرة مزدوجة — سيظهر <b>معالج تثبيت حديث</b> بشعار البرنامج: اضغط «التالي» ثم «تثبيت»، وفي النهاية يمكنك اختيار <b>تشغيل البرنامج الآن</b> و<b>إنشاء أيقونة على سطح المكتب</b>. يفتح البرنامج في نافذة مستقلة بدون شريط المتصفح ويعمل بالكامل دون إنترنت.<br><span style="opacity:.8"><b>Windows:</b> Click the Windows button to download <b>"مع القرآن - تلاوة وحفظ.exe"</b>. Double-click it — a <b>modern install wizard</b> with the app logo appears: click Next then Install, and at the end you can tick <b>Launch now</b> and <b>Create desktop icon</b>. The app opens in its own window with no browser bar and works fully offline.</span><br><span style="opacity:.7;font-size:12px">ℹ️ إذا ظهر تحذير Windows SmartScreen اختر «More info» ثم «Run anyway». / If Windows SmartScreen appears, choose "More info" then "Run anyway".</span></p>
 
-      <p class="dlp-note dlp-note-win">🤖 <b>أندرويد:</b> افتح هذا الموقع في متصفح <b>كروم</b> على هاتفك واضغط زر Android — سيظهر خيار <b>التثبيت</b> مباشرة (أو من قائمة كروم ⋮ اختر «إضافة إلى الشاشة الرئيسية»). يُضيف التطبيق أيقونة على الشاشة الرئيسية ويفتح في نافذة مستقلة، ويعمل دون إنترنت بعد تنزيل المحتوى من قائمة «التنزيل دون اتصال».<br><span style="opacity:.8"><b>Android:</b> Open this site in <b>Chrome</b> on your phone and tap the Android button — an <b>Install</b> prompt appears (or use Chrome menu ⋮ → "Add to Home screen"). The app gets a home-screen icon, opens in its own window, and works offline after downloading content from the "Offline Downloads" menu.</span></p>
+      <p class="dlp-note dlp-note-win">🤖 <b>أندرويد:</b> اضغط زر Android لفتح صفحة التطبيق على <b>متجر Google Play</b>، ثم اضغط <b>«تثبيت»</b>. يُثبَّت التطبيق كتطبيق حقيقي على هاتفك ويعمل دون إنترنت بعد تنزيل المحتوى من قائمة «التنزيل دون اتصال».<br><span style="opacity:.8"><b>Android:</b> Tap the Android button to open the app on <b>Google Play</b>, then tap <b>Install</b>. It installs as a real app on your phone and works offline after downloading content from the "Offline Downloads" menu.</span></p>
 
       <p class="dlp-note dlp-note-win">🍎 <b>آيفون / آيباد:</b> افتح الموقع في <b>Safari</b>، اضغط زر المشاركة ⬆️ ثم اختر <b>«أضف إلى الشاشة الرئيسية»</b>. تظهر أيقونة التطبيق على شاشتك ويعمل دون إنترنت بعد تنزيل المحتوى. (يجب استخدام Safari.)<br><span style="opacity:.8"><b>iPhone / iPad:</b> Open the site in <b>Safari</b>, tap the Share button ⬆️, then choose <b>"Add to Home Screen"</b>. The app icon appears on your screen and works offline after downloading content. (Safari is required.)</span></p>
 
@@ -3053,7 +3053,7 @@ document.querySelectorAll('.dlp-btn').forEach(b=>{
   b.addEventListener('click',()=>{
     const os=b.dataset.os||'';
     if(os==='Windows'){ downloadAppForWindows(b); return; }
-    if(os==='Android'){ installForAndroid(); return; }
+    if(os==='Android'){ window.open('https://play.google.com/store/apps/details?id=com.maalquran.twa','_blank','noopener'); return; }
     if(os==='iOS'){ installForIos(); return; }
     if(os==='macOS'||os==='Linux'){ installForDesktop(os); return; }
     showToast('نسخة '+os+' قيد التجهيز / '+os+' version coming soon');
