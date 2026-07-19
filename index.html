@@ -4359,7 +4359,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
      Re-measure once everything has really settled so the arrow truly starts at (1)
      and ends at (2): after full page load, after fonts load, and whenever either
      panel changes size (grid rendered, student switched, etc.). */
-  window.addEventListener('load',function(){drawStepLine();setTimeout(drawStepLine,350);});
+  window.addEventListener('load',function(){drawStepLine();setTimeout(drawStepLine,500);setTimeout(drawStepLine,1200);setTimeout(drawStepLine,2500);});
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){drawStepLine();});
   if(typeof ResizeObserver!=='undefined'){
     var roT=null,ro=new ResizeObserver(function(){clearTimeout(roT);roT=setTimeout(drawStepLine,120);});
