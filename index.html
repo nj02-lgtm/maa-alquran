@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl" translate="no" class="notranslate">
 <head>
   <meta charset="UTF-8"/>
-  <!-- build: arrow-css-v3 -->
+  <!-- build: arrow-css-v4 -->
 <title>مع القرآن تلاوة وحفظ | Quran — Recite &amp; Memorize</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"/>
   <!-- PWA (installable + offline app shell) -->
@@ -352,11 +352,11 @@ body.dark .goal-note{background:#1c2a38;border-color:#33485d;color:#aebfd0}
            right edge of stroke = 16 + 13.5 = 29.5px  (over badge 1's centre)
            span = 50% of row - half gap (8) + gap-side offsets = 50% + 5.5px (to badge 2's centre)
          It appears fully formed, holds ~2s, and fades. */
-      .step-arrow-css{display:block;position:absolute;top:8px;right:29.5px;width:calc(50% + 5.5px);height:23px;
+      .step-arrow-css{display:block;position:absolute;top:8px;right:29.5px;width:calc(50% + 5.5px);height:13px;
         border-top:1.5px solid #8a8a8a;border-right:1.5px solid #8a8a8a;border-left:1.5px solid #8a8a8a;
         border-bottom:none;border-radius:9px 9px 0 0;pointer-events:none;z-index:4;
         animation:stepFlash .8s ease-in-out .4s 1 both;}
-      /* arrowhead pointing down onto badge (2) at the left end of the bracket */
+      /* arrowhead pointing down onto badge (2), tip ending just above the circle */
       .step-arrow-css::after{content:'';position:absolute;left:-5.6px;bottom:-8px;
         border:4.5px solid transparent;border-top:8px solid #8a8a8a;border-bottom:none;}
       body.dark .step-arrow-css{border-color:#d8c98a;}
