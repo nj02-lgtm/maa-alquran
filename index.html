@@ -3083,7 +3083,27 @@ const OfflineDB = (function(){
       const r=indexedDB.open(NAME,VER);
       r.onupgradeneeded=e=>{const db=e.target.result;STORES.forEach(s=>{if(!db.objectStoreNames.contains(s))db.createObjectStore(s);});};
       r.onsuccess=e=>{clearTimeout(to);_db=e.target.result;done(res,_db);};
-      r.onerror=e=>{clearTimeout(to);done(rej,e.target.error);};
+      r.onerror=e=>{clearTimeout(to);
+        const err=e.target.error;
+        if(err&&err.name==='VersionError'){
+          /* The DB on disk was created by a newer build with a higher version.
+             Requesting an older version fails silently and everything reads as
+             empty (counters show 0 even though data exists). Reopen at the
+             disk's current version and add any missing stores. */
+          const r2=indexedDB.open(NAME);
+          r2.onsuccess=e2=>{
+            const db2=e2.target.result;
+            const missing=STORES.filter(s=>!db2.objectStoreNames.contains(s));
+            if(!missing.length){_db=db2;done(res,_db);return;}
+            const v=db2.version+1; db2.close();
+            const r3=indexedDB.open(NAME,v);
+            r3.onupgradeneeded=e3=>{const db3=e3.target.result;STORES.forEach(s=>{if(!db3.objectStoreNames.contains(s))db3.createObjectStore(s);});};
+            r3.onsuccess=e3=>{_db=e3.target.result;done(res,_db);};
+            r3.onerror=e3=>done(rej,e3.target.error);
+          };
+          r2.onerror=e2=>done(rej,e2.target.error);
+        } else done(rej,err);
+      };
       r.onblocked=()=>{clearTimeout(to);done(rej,new Error('idb-blocked'));};
     });
   }
@@ -3095,6 +3115,10 @@ const OfflineDB = (function(){
   function keys(store){return _os(store,'readonly').then(os=>new Promise((res,rej)=>{const r=os.getAllKeys();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error);}));}
   return {get,put,count,clearAll,keys};
 })();
+
+/* Ask the browser to treat our storage as persistent so downloaded pages,
+   recitations and tafsir aren't silently evicted between sessions. */
+try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{}); }catch(e){}
 
 // Simple concurrency-limited task runner with progress + cancel.
 let _dlCancel=false;
@@ -3207,6 +3231,8 @@ async function downloadPagesRange(from,to,onProgress){
   if(from>to){const t=from;from=to;to=t;}
   const pages=[]; for(let p=from;p<=to;p++) pages.push(p);
   const tasks=pages.map(p=>async()=>{
+    // Already downloaded? Count it and skip (makes restarts resume instead of redoing).
+    try{ const ex=await OfflineDB.get('pages',p); if(ex && ex.length){ return true; } }catch(e){}
     // verses JSON
     const vUrl=`${CDN_VERSES}/verses/by_page/${p}?words=true&word_fields=text_qpc_hafs_tajweed,qpc_uthmani_hafs,char_type_name,line_number&per_page=50&fields=text_qpc_hafs_tajweed,chapter_id,verse_number`;
     const vr=await fetch(vUrl); if(!vr.ok) throw new Error('verses'); const vj=await vr.json();
@@ -3224,6 +3250,8 @@ async function downloadRecitationsRange(list,folder,onProgress){
   const tasks=list.map(({surah,ayah})=>async()=>{
     const s=String(surah).padStart(3,'0'), a=String(ayah).padStart(3,'0');
     const key=`${folder}:${s}${a}`;
+    // Already downloaded? Count it and skip so restarts resume instead of redoing.
+    try{ const ex=await OfflineDB.get('audio',key); if(ex){ return true; } }catch(e){}
     const r=await fetch(`${EVERYAYAH_BASE}/${folder}/${s}${a}.mp3`);
     if(!r.ok) throw new Error('audio');
     const b=await r.blob();
@@ -3237,6 +3265,8 @@ async function downloadRecitationsRange(list,folder,onProgress){
 async function downloadTafsirRange(list,tafsirId,onProgress){
   const tasks=list.map(({surah,ayah})=>async()=>{
     const vk=`${surah}:${ayah}`;
+    // Already downloaded? Count it and skip so restarts resume instead of redoing.
+    try{ const ex=await OfflineDB.get('tafsir',`${tafsirId}:${vk}`); if(typeof ex==='string' && ex){ return true; } }catch(e){}
     const r=await fetch(`${CDN_VERSES}/tafsirs/${tafsirId}/by_ayah/${vk}`);
     if(!r.ok) throw new Error('tafsir');
     const data=await r.json();
@@ -4325,6 +4355,16 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     row.classList.add('steps-go');   // one trigger, one clock: line, arrow and badges start together
   }
   window.addEventListener('resize',drawStepLine);
+  /* The panels are filled in by JS after DOMContentLoaded, which moves the badges.
+     Re-measure once everything has really settled so the arrow truly starts at (1)
+     and ends at (2): after full page load, after fonts load, and whenever either
+     panel changes size (grid rendered, student switched, etc.). */
+  window.addEventListener('load',function(){drawStepLine();setTimeout(drawStepLine,350);});
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){drawStepLine();});
+  if(typeof ResizeObserver!=='undefined'){
+    var roT=null,ro=new ResizeObserver(function(){clearTimeout(roT);roT=setTimeout(drawStepLine,120);});
+    document.querySelectorAll('.layout-row .panel').forEach(function(p){ro.observe(p);});
+  }
   function init(){
     var list=document.getElementById('compactSummaryList');
     if(list&&!list.dataset.mobEnh){list.dataset.mobEnh='1';list.addEventListener('click',onSummaryClick);}
