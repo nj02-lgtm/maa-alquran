@@ -2,7 +2,8 @@
 <html lang="ar" dir="rtl" translate="no" class="notranslate">
 <head>
   <meta charset="UTF-8"/>
-  <title>مع القرآن تلاوة وحفظ | Quran — Recite &amp; Memorize</title>
+  <!-- build: arrow-css-v3 -->
+<title>مع القرآن تلاوة وحفظ | Quran — Recite &amp; Memorize</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover"/>
   <!-- PWA (installable + offline app shell) -->
   <link rel="manifest" href="manifest.json"/>
@@ -341,24 +342,35 @@ body.dark .goal-note{background:#1c2a38;border-color:#33485d;color:#aebfd0}
     .layout-row > .panel:nth-child(1){order:2;}   /* pages = step 2 */
     .layout-row > .panel:nth-child(2){order:1;}   /* memorized juz = step 1, met first */
     .layout-row{position:relative;}
-    .step-line{display:none;}
+    .step-line,.step-arrow-css{display:none;}
     @media(min-width:1025px){
       .layout-row{padding-top:18px;}
-      .step-line{display:block;position:absolute;top:0;left:0;width:100%;height:46px;pointer-events:none;z-index:4;overflow:visible;}
-      .step-line #stepTracePath{stroke:#5a5a5a;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100;}
-      .layout-row.steps-go .step-line #stepTracePath{animation:pathDraw 1.6s linear .3s forwards;}
-      .step-line .step-arrowhead{fill:#8a8a8a;stroke:none;opacity:0;offset-rotate:auto;}
-      .layout-row.steps-go .step-line .step-arrowhead{animation:arrowRide 1.6s linear .3s forwards;}
-      body.dark .step-line #stepTracePath{stroke:#d8c98a;}
-      body.dark .step-line .step-arrowhead{fill:#d8c98a;}
+      /* Pure-CSS arrow from badge (1) to badge (2). RTL layout: (1) is at the top-right
+         of the RIGHT panel, (2) at the top-right of the LEFT panel. Position is plain
+         arithmetic on the row width (panels are a fixed 50/50 grid with 16px gap and
+         16px panel padding), so no measuring, no JS, nothing that can drift:
+           right edge of stroke = 16 + 13.5 = 29.5px  (over badge 1's centre)
+           span = 50% of row - half gap (8) + gap-side offsets = 50% + 5.5px (to badge 2's centre)
+         It appears fully formed, holds ~2s, and fades. */
+      .step-arrow-css{display:block;position:absolute;top:8px;right:29.5px;width:calc(50% + 5.5px);height:23px;
+        border-top:1.5px solid #8a8a8a;border-right:1.5px solid #8a8a8a;border-left:1.5px solid #8a8a8a;
+        border-bottom:none;border-radius:9px 9px 0 0;pointer-events:none;z-index:4;
+        animation:stepFlash .8s ease-in-out .4s 1 both;}
+      /* arrowhead pointing down onto badge (2) at the left end of the bracket */
+      .step-arrow-css::after{content:'';position:absolute;left:-5.6px;bottom:-8px;
+        border:4.5px solid transparent;border-top:8px solid #8a8a8a;border-bottom:none;}
+      body.dark .step-arrow-css{border-color:#d8c98a;}
+      body.dark .step-arrow-css::after{border-top-color:#d8c98a;}
+      /* badges pulse in step order while the arrow is visible */
+      .step-badge.step-1{animation:stepPulse .6s ease 1 .6s;}
+      .step-badge.step-2{animation:stepPulse .6s ease 1 1.1s;}
     }
-    @keyframes pathDraw{to{stroke-dashoffset:0;}}
-    @keyframes arrowRide{0%{opacity:1;offset-distance:0%;}100%{opacity:1;offset-distance:100%;}}
+    /* Whole arrow appears fully formed and stays visible — no drawing motion, no fade-out. */
+    @keyframes stepFlash{0%{opacity:0;}100%{opacity:1;}}
     .step-badge{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#d4a017;color:#fff;font-weight:800;font-size:13px;vertical-align:middle;margin-inline-end:4px;box-shadow:0 1px 3px rgba(0,0,0,.2);}
     .step-badge.step-1{width:27px;height:27px;font-size:16px;}
-    .layout-row.steps-go .step-badge.step-1{animation:stepPulse .6s ease 1;}
-    .layout-row.steps-go .step-badge.step-2{animation:stepPulse .7s ease 1 1.9s;}
     @keyframes stepPulse{0%,100%{transform:scale(1);box-shadow:0 1px 3px rgba(0,0,0,.2);}50%{transform:scale(1.3);box-shadow:0 0 0 7px rgba(212,160,23,.3);}}
+
 
     .panel{background:#fdfaf4;border-radius:14px;padding:14px 16px;box-shadow:0 1px 3px rgba(15,23,42,.12);display:flex;flex-direction:column;gap:10px;}
     .panel-header{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;}
@@ -1239,7 +1251,7 @@ body.dark .tafsir-selector-row label {
         </div>
         <button class="btn-primary btn-outline" id="resetAllDataBtn" style="width:100%;margin-top:4px;">🔄 إعادة تعيين / Reset</button>
       </section>
-      <svg class="step-line" aria-hidden="true"><path id="stepTracePath" d="M0 0" pathLength="100" fill="none"/><path class="step-arrowhead" d="M0 -3 L6 0 L0 3 Z"/></svg>
+      <div class="step-arrow-css" aria-hidden="true"></div>
     </div>
 
     <!-- Details modal -->
@@ -4339,32 +4351,10 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     });
     row.appendChild(btn);p.insertBefore(row,grid);
   }
-  function drawStepLine(){
-    var svg=document.querySelector('svg.step-line'); if(!svg)return;
-    var path=svg.querySelector('#stepTracePath'), row=document.querySelector('.layout-row');
-    var b1=document.querySelector('.step-badge.step-1'), b2=document.querySelector('.step-badge.step-2');
-    if(!path||!row||!b1||!b2)return;
-    if(window.innerWidth<=1024)return;
-    var r=row.getBoundingClientRect(), r1=b1.getBoundingClientRect(), r2=b2.getBoundingClientRect();
-    var x1=r1.left+r1.width/2-r.left, x2=r2.left+r2.width/2-r.left;
-    var y1=r1.top-r.top-3, y2=r2.top-r.top-3;
-    var d='M '+x1+' '+y1+' V 8 H '+x2+' V '+y2;
-    path.setAttribute('d',d);
-    var ah=svg.querySelector('.step-arrowhead');
-    if(ah)ah.style.offsetPath='path("'+d+'")';
-    row.classList.add('steps-go');   // one trigger, one clock: line, arrow and badges start together
-  }
-  window.addEventListener('resize',drawStepLine);
-  /* The panels are filled in by JS after DOMContentLoaded, which moves the badges.
-     Re-measure once everything has really settled so the arrow truly starts at (1)
-     and ends at (2): after full page load, after fonts load, and whenever either
-     panel changes size (grid rendered, student switched, etc.). */
-  window.addEventListener('load',function(){drawStepLine();setTimeout(drawStepLine,500);setTimeout(drawStepLine,1200);setTimeout(drawStepLine,2500);});
-  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){drawStepLine();});
-  if(typeof ResizeObserver!=='undefined'){
-    var roT=null,ro=new ResizeObserver(function(){clearTimeout(roT);roT=setTimeout(drawStepLine,120);});
-    document.querySelectorAll('.layout-row .panel').forEach(function(p){ro.observe(p);});
-  }
+  /* The step arrow is now pure CSS (.step-arrow-css): fixed position from the
+     50/50 grid arithmetic, auto-flashes on page load. No measuring, no timing,
+     nothing to go wrong. This stub keeps older callers happy. */
+  function drawStepLine(){}
   function init(){
     var list=document.getElementById('compactSummaryList');
     if(list&&!list.dataset.mobEnh){list.dataset.mobEnh='1';list.addEventListener('click',onSummaryClick);}
