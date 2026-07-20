@@ -3976,8 +3976,13 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
      Play Store test track). Tune the min-height values if the visual
      proportions need adjusting. ── */
   @supports not (aspect-ratio: 1/1){
+    /* Old WebView (<Chromium 88): aspect-ratio is ignored, so without this the
+       summary cards fall back to min-height:0 !important and collapse around
+       the number. These !important rules override that and give the box a real
+       square-ish height, matching how .page-cell gets its height from padding. */
     .summary-grid{grid-auto-rows:1fr;}
-    .summary-card{min-height:62px;}
+    .summary-card{min-height:64px !important;padding:5px 2px !important;justify-content:center;}
+    .summary-card .sc-num{font-size:14px !important;}
     .page-cell{min-height:84px;}
   }
 
