@@ -3956,16 +3956,16 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   /* ── 7. Memorized-Juz summary boxes: 6 per line ── */
   /* Memorized-Juz grid: 5 columns x 6 rows = 30 juz, square boxes, roomier */
   .summary-grid{grid-template-columns:repeat(5,1fr) !important;gap:6px;}
-  .summary-card{aspect-ratio:1/1;padding:2px !important;min-height:0 !important;gap:2px;border-radius:10px;}
-  .summary-card .sc-num{font-size:15px !important;margin-bottom:2px !important;}
+  .summary-card{padding:7px 2px !important;min-height:72px;gap:2px;border-radius:10px;justify-content:center;overflow:hidden;}
+  .summary-card .sc-num{font-size:18px !important;margin-bottom:2px !important;}
 
   /* ── 8. Juz page grid: 4 compact boxes per line ── */
   .page-grid{grid-template-columns:repeat(4,1fr) !important;gap:5px !important;}
   .page-cell{padding:27px 3px 3px !important;min-height:0 !important;gap:1px;border-radius:7px;}
-  .page-number{font-size:12px;margin-top:0;}
-  .surah-name{font-size:9px;line-height:1.15;}
-  .page-cell .surah-name span[lang="en"]{font-size:8px !important;}
-  .surah-name-extra{font-size:7.5px;margin-top:1px;padding-top:1px;}
+  .page-number{font-size:15px;margin-top:0;}
+  .surah-name{font-size:11px;line-height:1.15;}
+  .page-cell .surah-name span[lang="en"]{font-size:10px !important;}
+  .surah-name-extra{font-size:9px;margin-top:1px;padding-top:1px;}
   .open-page-icon{width:28px;height:26px;top:0;left:0;font-size:11px;background-size:20px 18px;background-position:4px 4px;}
 
   /* ── 7b/8b. Fallback for WebViews older than Chromium 88, which ignore
@@ -3975,16 +3975,10 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
      (this is the root cause of the distorted Juz boxes reported on the
      Play Store test track). Tune the min-height values if the visual
      proportions need adjusting. ── */
-  @supports not (aspect-ratio: 1/1){
-    /* Old WebView (<Chromium 88): aspect-ratio is ignored, so without this the
-       summary cards fall back to min-height:0 !important and collapse around
-       the number. These !important rules override that and give the box a real
-       square-ish height, matching how .page-cell gets its height from padding. */
-    .summary-grid{grid-auto-rows:1fr;}
-    .summary-card{min-height:64px !important;padding:5px 2px !important;justify-content:center;}
-    .summary-card .sc-num{font-size:14px !important;}
-    .page-cell{min-height:84px;}
-  }
+  /* Juz (summary) boxes no longer use aspect-ratio at all: they size by
+     padding + min-height like the page boxes, so they grow to fit their
+     contents and the number can never overflow, on any WebView/engine. */
+  .page-cell{min-height:92px;}
 
   /* ── 9. Memorized Juz / Full Details: collapsible band ── */
   .panel.mobile-collapsible{padding:0;gap:0;}
