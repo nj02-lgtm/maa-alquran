@@ -208,7 +208,7 @@ body.dark .dl-storage-grid span{color:#7db8e8;}
 .mp-juz-section{margin-bottom:16px;}
 .mp-juz-label{font-size:12px;font-weight:700;color:#1f4f7b;margin-bottom:7px;padding:5px 10px;background:#e9e0cf;border-radius:7px;display:flex;justify-content:space-between;}
 .mp-page-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:5px;}
-.mp-page{aspect-ratio:1;border-radius:7px;border:1px solid #e5d7b8;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-weight:700;transition:transform .1s,box-shadow .1s;}
+.mp-page{aspect-ratio:1/1;border-radius:7px;border:1px solid #e5d7b8;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-weight:700;transition:transform .1s,box-shadow .1s;}
 .mp-page:hover{transform:scale(1.1);box-shadow:0 2px 8px rgba(0,0,0,.12);}
 .mp-page.s-green{background:#d9f5c9;border-color:#93d67e;}
 .mp-page.s-yellow{background:#f7e29b;border-color:#e0b94a;}
@@ -3968,6 +3968,19 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .surah-name-extra{font-size:7.5px;margin-top:1px;padding-top:1px;}
   .open-page-icon{width:28px;height:26px;top:0;left:0;font-size:11px;background-size:20px 18px;background-position:4px 4px;}
 
+  /* ── 7b/8b. Fallback for WebViews older than Chromium 88, which ignore
+     aspect-ratio entirely. Without this, .summary-card / .page-cell have
+     no height rule at all and collapse to squashed, uneven boxes on
+     Android System WebView builds that predate aspect-ratio support
+     (this is the root cause of the distorted Juz boxes reported on the
+     Play Store test track). Tune the min-height values if the visual
+     proportions need adjusting. ── */
+  @supports not (aspect-ratio: 1/1){
+    .summary-grid{grid-auto-rows:1fr;}
+    .summary-card{min-height:62px;}
+    .page-cell{min-height:84px;}
+  }
+
   /* ── 9. Memorized Juz / Full Details: collapsible band ── */
   .panel.mobile-collapsible{padding:0;gap:0;}
   .panel.mobile-collapsible > .panel-header{
@@ -4295,7 +4308,9 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   }
 
   /* 3. "First unmemorized" quick jump (injected into the pages panel) */
-  .mob-jump-row{display:flex;gap:8px;margin:0 0 8px;}
+  /* Removed per request: hidden defensively in case a cached script injects it. */
+  .mob-jump-row{display:none !important;}
+  .mob-jump-row.__legacy{display:flex;gap:8px;margin:0 0 8px;}
   .mob-jump-btn{
     flex:1 1 auto;border:none;cursor:pointer;color:#fff;background:#1f4f7b;
     border-radius:40px;padding:9px 12px;display:flex;align-items:center;
@@ -4362,7 +4377,8 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var list=document.getElementById('compactSummaryList');
     if(list&&!list.dataset.mobEnh){list.dataset.mobEnh='1';list.addEventListener('click',onSummaryClick);}
     drawStepLine();
-    injectJump();
+    /* injectJump() removed: the blue "First unmemorized" quick-jump button
+       is no longer inserted on mobile, per request. */
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
