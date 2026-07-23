@@ -4089,7 +4089,7 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .page-modal-audio #playbackStatus{flex:1 1 100%;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;order:5;}
 
   .mushaf-page-wrap:not([data-page="1"]):not([data-page="2"]) .mushaf-word{
-    font-size:var(--mushaf-fs,15px) !important;
+    font-size:var(--mushaf-fs,20px) !important;
     line-height:1.55 !important;
   }
   .mushaf-page-wrap:not([data-page="1"]):not([data-page="2"]) .mushaf-line{
@@ -4153,59 +4153,43 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var lines = wrap.querySelectorAll('.mushaf-line');
     if(!lines.length) return;
 
-    var BASE = (pg === '1' || pg === '2') ? 26 : 17;  /* printed starting size */
-    var FLOOR = (pg === '1' || pg === '2') ? 18 : 13; /* never smaller than this */
+    /* One size for the whole page (all lines identical, as in the printed
+       Mushaf). Base is 20px to match the earlier revision, whose text was
+       larger with tighter word gaps; shrinking only happens when a line
+       genuinely overflows, because every 0.5px shaved off the font is space
+       that justify-content:space-between then spreads out as wider gaps. */
+    var BASE  = (pg === '1' || pg === '2') ? 26 : 20;
+    var FLOOR = (pg === '1' || pg === '2') ? 18 : 15;
 
-    /* Pages 1 & 2 keep a single page-wide size (their layout is centred and
-       nowrap, so per-line sizing would look wrong there). */
-    if(pg === '1' || pg === '2'){
-      wrap.style.setProperty('--mushaf-fs', BASE + 'px');
-    } else {
-      wrap.style.setProperty('--mushaf-fs', BASE + 'px');
-    }
+    var fs = BASE;
+    wrap.style.setProperty('--mushaf-fs', fs + 'px');
+    /* Clear any per-line sizes a previous build may have left behind. */
+    for(var c=0;c<lines.length;c++) lines[c].style.removeProperty('--mushaf-fs');
 
-    /* Does this one line's words fit within its own width?
-       Measure the words only, not the space-between gaps: space-between
-       distributes leftover room *after* placing words, so scrollWidth would
-       report a false overflow on lines that actually fit.
+    /* Measure the words themselves, not the space-between gaps: space-between
+       distributes leftover room *after* the words are placed, so scrollWidth
+       reports a false overflow on lines that actually fit.
        getBoundingClientRect gives sub-pixel widths (offsetWidth rounds per
        word, and those roundings accumulate across a line of Arabic glyphs). */
-    function lineFits(line){
-      var words = line.querySelectorAll('.mushaf-word');
-      if(!words.length) return true;
-      var wordsWidth = 0;
-      for(var w=0;w<words.length;w++){
-        wordsWidth += words[w].getBoundingClientRect().width;
+    function fits(){
+      for(var i=0;i<lines.length;i++){
+        var words = lines[i].querySelectorAll('.mushaf-word');
+        if(!words.length) continue;
+        var wordsWidth = 0;
+        for(var w=0;w<words.length;w++){
+          wordsWidth += words[w].getBoundingClientRect().width;
+        }
+        var avail = lines[i].getBoundingClientRect().width - 8; /* line padding */
+        if(wordsWidth > avail + 2.5) return false;
       }
-      var avail = line.getBoundingClientRect().width - 8; /* line padding */
-      return wordsWidth <= avail + 2.5;
+      return true;
     }
 
-    /* Size each line on its own. Previously one unusually dense line (e.g. the
-       long line on page 135) forced the whole page down to its size, which is
-       why some pages looked markedly smaller than their neighbours while their
-       other lines showed wide gaps. Now only the dense line shrinks. */
-    if(pg === '1' || pg === '2'){
-      var fs = BASE, guard = 0, ok;
-      do{
-        ok = true;
-        for(var i=0;i<lines.length;i++){ if(!lineFits(lines[i])){ ok = false; break; } }
-        if(ok) break;
-        fs -= 0.5;
-        wrap.style.setProperty('--mushaf-fs', fs + 'px');
-      } while(fs > FLOOR && ++guard < 60);
-      return;
-    }
-
-    for(var L=0;L<lines.length;L++){
-      var line = lines[L];
-      var size = BASE, g = 0;
-      line.style.setProperty('--mushaf-fs', size + 'px');
-      while(!lineFits(line) && size > FLOOR && g < 40){
-        size -= 0.5;
-        line.style.setProperty('--mushaf-fs', size + 'px');
-        g++;
-      }
+    var guard = 0;
+    while(!fits() && fs > FLOOR && guard < 60){
+      fs -= 0.5;
+      wrap.style.setProperty('--mushaf-fs', fs + 'px');
+      guard++;
     }
   }
 
