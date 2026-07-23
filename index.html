@@ -4444,7 +4444,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
    Harmless where unsupported (e.g. opened as a local file). */
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', function () {
-    navigator.serviceWorker.register('service-worker.js').catch(function () {});
+    navigator.serviceWorker.register('service-worker.js', {updateViaCache:'none'}).catch(function () {});
   });
 }
 </script>

@@ -9,7 +9,7 @@
  * works whether the site lives at a domain root (https://example.com/) or in
  * a subfolder (https://user.github.io/repo/) — no editing needed either way.
  */
-const CACHE = 'maa-alquran-shell-v3';
+const CACHE = 'maa-alquran-shell-v4';
 const ROOT = new URL('./', self.location).href;   // e.g. https://user.github.io/repo/
 const PAGE_URL = ROOT;                              // the app's start page
 const SHELL = [
@@ -55,7 +55,11 @@ self.addEventListener('fetch', (event) => {
   if (req.mode === 'navigate') {
     event.respondWith((async () => {
       try {
-        const fresh = await fetch(req);
+        /* cache:'no-store' bypasses the browser's own HTTP cache. Without it
+           "network-first" can still be answered from Chrome's disk cache, so
+           an updated index.html never reaches the user (Edge/Firefox happened
+           to revalidate and updated; Chrome kept serving the stale page). */
+        const fresh = await fetch(req, {cache: 'no-store'});
         const cache = await caches.open(CACHE);
         cache.put(PAGE_URL, fresh.clone()).catch(() => {});
         return fresh;
