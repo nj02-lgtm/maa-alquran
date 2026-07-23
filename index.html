@@ -4196,11 +4196,24 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   /* Safari/WebKit can report in-flux widths right after a page renders,
      which over-shrinks some pages (e.g. 135). Re-run the fit once after
      layout settles so the final size is decided on stable measurements. */
+  /* Chrome (and Safari) substitute a fallback font while a webfont downloads,
+     and on slow networks Chrome explicitly intervenes to do so. Fallback fonts
+     have wider letterforms, so a fit run during that window shrinks the text to
+     fit words that are wider than the real ones -- and the page then stays
+     stuck at that smaller size once the real Mushaf font swaps in, with the
+     freed space showing as wide gaps between words. Re-fitting on every font
+     load (and a few times after render) lets the page recover automatically. */
   function fitMushafSettled(){
     fitMushaf();
-    setTimeout(fitMushaf, 150);
+    [150, 600, 1500, 3000].forEach(function(ms){ setTimeout(fitMushaf, ms); });
   }
   window.fitMushafSettled = fitMushafSettled;
+
+  if(document.fonts && document.fonts.addEventListener){
+    document.fonts.addEventListener('loadingdone', function(){
+      setTimeout(fitMushaf, 30);
+    });
+  }
 
   /* Re-fit whenever a new page is rendered into the Quran panel */
   var pmb = document.getElementById('pageModalBody');
