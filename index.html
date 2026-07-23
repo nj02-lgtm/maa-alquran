@@ -4160,16 +4160,26 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
           wordsWidth += words[w].getBoundingClientRect().width;
         }
         var avail = lines[i].getBoundingClientRect().width - 8; /* line padding */
-        if(wordsWidth > avail + 1) return false;
+        if(wordsWidth > avail + 2.5) return false;
       }
       return true;
     }
     var guard = 0;
-    while(!fits() && fs > 10 && guard < 60){
+    /* 2px tolerance absorbs Safari sub-pixel noise; floor of 13px ensures no
+       page can ever become unreadably small even in worst-case measurement. */
+    while(!fits() && fs > 13 && guard < 60){
       fs -= 0.5;
       wrap.style.setProperty('--mushaf-fs', fs + 'px');
       guard++;
     }
+  }
+
+  /* Safari/WebKit can report in-flux widths right after a page renders,
+     which over-shrinks some pages (e.g. 135). Re-run the fit once after
+     layout settles so the final size is decided on stable measurements. */
+  function fitMushafSettled(){
+    fitMushaf();
+    setTimeout(fitMushaf, 150);
   }
 
   /* Re-fit whenever a new page is rendered into the Quran panel */
@@ -4178,13 +4188,13 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var raf = null;
     new MutationObserver(function(){
       if(raf) cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(fitMushaf);
+      raf = requestAnimationFrame(fitMushafSettled);
     }).observe(pmb, {childList:true, subtree:true});
   }
   if(document.fonts && document.fonts.ready){
-    document.fonts.ready.then(function(){ setTimeout(fitMushaf, 60); });
+    document.fonts.ready.then(function(){ setTimeout(fitMushafSettled, 60); });
   }
-  window.addEventListener('resize', function(){ setTimeout(fitMushaf, 120); });
+  window.addEventListener('resize', function(){ setTimeout(fitMushafSettled, 120); });
 
   /* ── Draggable "ruler": resize Quran vs translation on phones ── */
   var splitter = document.getElementById('mushafSplitter');
