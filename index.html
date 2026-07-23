@@ -4153,37 +4153,59 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var lines = wrap.querySelectorAll('.mushaf-line');
     if(!lines.length) return;
 
-    /* Pages 1 & 2 use a larger printed size; every page now shrinks-to-fit so
-       each line keeps exactly the same words regardless of screen width. */
-    var fs = (pg === '1' || pg === '2') ? 26 : 17;   /* starting size in px */
-    wrap.style.setProperty('--mushaf-fs', fs + 'px');
+    var BASE = (pg === '1' || pg === '2') ? 26 : 17;  /* printed starting size */
+    var FLOOR = (pg === '1' || pg === '2') ? 18 : 13; /* never smaller than this */
 
-    function fits(){
-      for(var i=0;i<lines.length;i++){
-        /* Measure only the words' own widths, not the space-between gaps.
-           justify-content:space-between inflates scrollWidth on lines with
-           few words, which caused false overflow and needless shrinking on
-           pages like 138-140 / 142-143. getBoundingClientRect gives sub-pixel
-           widths; offsetWidth rounds per word and those roundings accumulate
-           in Safari/WebKit with Arabic glyphs. */
-        var words = lines[i].querySelectorAll('.mushaf-word');
-        if(!words.length) continue;
-        var wordsWidth = 0;
-        for(var w=0;w<words.length;w++){
-          wordsWidth += words[w].getBoundingClientRect().width;
-        }
-        var avail = lines[i].getBoundingClientRect().width - 8; /* line padding */
-        if(wordsWidth > avail + 2.5) return false;
-      }
-      return true;
+    /* Pages 1 & 2 keep a single page-wide size (their layout is centred and
+       nowrap, so per-line sizing would look wrong there). */
+    if(pg === '1' || pg === '2'){
+      wrap.style.setProperty('--mushaf-fs', BASE + 'px');
+    } else {
+      wrap.style.setProperty('--mushaf-fs', BASE + 'px');
     }
-    var guard = 0;
-    /* 2px tolerance absorbs Safari sub-pixel noise; floor of 13px ensures no
-       page can ever become unreadably small even in worst-case measurement. */
-    while(!fits() && fs > 13 && guard < 60){
-      fs -= 0.5;
-      wrap.style.setProperty('--mushaf-fs', fs + 'px');
-      guard++;
+
+    /* Does this one line's words fit within its own width?
+       Measure the words only, not the space-between gaps: space-between
+       distributes leftover room *after* placing words, so scrollWidth would
+       report a false overflow on lines that actually fit.
+       getBoundingClientRect gives sub-pixel widths (offsetWidth rounds per
+       word, and those roundings accumulate across a line of Arabic glyphs). */
+    function lineFits(line){
+      var words = line.querySelectorAll('.mushaf-word');
+      if(!words.length) return true;
+      var wordsWidth = 0;
+      for(var w=0;w<words.length;w++){
+        wordsWidth += words[w].getBoundingClientRect().width;
+      }
+      var avail = line.getBoundingClientRect().width - 8; /* line padding */
+      return wordsWidth <= avail + 2.5;
+    }
+
+    /* Size each line on its own. Previously one unusually dense line (e.g. the
+       long line on page 135) forced the whole page down to its size, which is
+       why some pages looked markedly smaller than their neighbours while their
+       other lines showed wide gaps. Now only the dense line shrinks. */
+    if(pg === '1' || pg === '2'){
+      var fs = BASE, guard = 0, ok;
+      do{
+        ok = true;
+        for(var i=0;i<lines.length;i++){ if(!lineFits(lines[i])){ ok = false; break; } }
+        if(ok) break;
+        fs -= 0.5;
+        wrap.style.setProperty('--mushaf-fs', fs + 'px');
+      } while(fs > FLOOR && ++guard < 60);
+      return;
+    }
+
+    for(var L=0;L<lines.length;L++){
+      var line = lines[L];
+      var size = BASE, g = 0;
+      line.style.setProperty('--mushaf-fs', size + 'px');
+      while(!lineFits(line) && size > FLOOR && g < 40){
+        size -= 0.5;
+        line.style.setProperty('--mushaf-fs', size + 'px');
+        g++;
+      }
     }
   }
 
