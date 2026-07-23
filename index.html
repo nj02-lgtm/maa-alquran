@@ -2286,6 +2286,19 @@ window.navigateModal = function(delta) {
       clearTimeout(tid);
       if(!verses.length)throw new Error('no-verses');
       await Promise.race([document.fonts.ready, new Promise(r=>setTimeout(r,2500))]);
+      /* If the page's QCF font arrives after render (it's best-effort above),
+         re-fit: fallback fonts have different word widths, so the initial fit
+         may have shrunk the text more than the real font needs. Without this,
+         pages whose font loaded slowly stay stuck at the smaller size. */
+      if(!fontName){
+        loadPageFont(page).then(function(n){
+          if(!n) return;
+          var w=document.querySelector('#pageModalBody .mushaf-page-wrap[data-page="'+page+'"]');
+          if(!w) return; /* user moved to another page */
+          w.style.fontFamily="'"+n+"','Amiri Quran','Scheherazade New','KFGQPC Uthmanic Script HAFS','Traditional Arabic',serif";
+          if(typeof window.fitMushafSettled==='function') setTimeout(window.fitMushafSettled,80);
+        }).catch(function(){});
+      }
       const lineMap=new Map();
       verses.forEach(verse=>{const vKey=`${verse.chapter_id}:${verse.verse_number}`;(verse.words||[]).forEach(word=>{const line=word.line_number||1;if(!lineMap.has(line))lineMap.set(line,[]);lineMap.get(line).push({word,verseKey:vKey});});});
       const sortedLines=[...lineMap.entries()].sort((a,b)=>a[0]-b[0]);
@@ -4181,6 +4194,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     fitMushaf();
     setTimeout(fitMushaf, 150);
   }
+  window.fitMushafSettled = fitMushafSettled;
 
   /* Re-fit whenever a new page is rendered into the Quran panel */
   var pmb = document.getElementById('pageModalBody');
