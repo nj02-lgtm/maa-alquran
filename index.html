@@ -4094,7 +4094,6 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
     padding:6px 4px !important;font-size:10.5px !important;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
-  .page-modal-audio #focusToggleBtn{flex:0 0 auto !important;}
   .page-modal-audio #playPageBtn{order:1;}
   .page-modal-audio #stopPlaybackBtn{order:2;}
   .page-modal-audio #wordPracticeBtn{order:3;}
@@ -4164,10 +4163,27 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
     position:fixed;left:12px;bottom:12px;z-index:60;
     width:44px;height:44px;border-radius:50%;
     background:rgba(30,78,122,.92);color:#fff;border:none;
-    font-size:19px;line-height:1;cursor:pointer;display:none;
+    font-size:20px;cursor:pointer;display:none;
+    align-items:center;justify-content:center;
+    padding:0;line-height:1;text-align:center;
     box-shadow:0 2px 10px rgba(0,0,0,.3);
   }
-  #pageContentModal.focus-mode .focus-restore-btn{display:block;}
+  #pageContentModal.focus-mode .focus-restore-btn{display:flex;}
+
+  /* Floating "enter full page" button. It's fixed and created as soon as the
+     page body has any Mushaf content, so full-screen works immediately on slow
+     devices instead of waiting for the audio/tafsir controls row to load. It
+     hides itself while in focus mode (the gear restores from there). */
+  .focus-enter-btn{
+    position:fixed;left:12px;bottom:12px;z-index:59;
+    width:44px;height:44px;border-radius:50%;
+    background:rgba(30,78,122,.92);color:#fff;border:none;
+    font-size:20px;cursor:pointer;display:none;
+    align-items:center;justify-content:center;
+    padding:0;line-height:1;text-align:center;
+    box-shadow:0 2px 10px rgba(0,0,0,.3);
+  }
+  #pageContentModal:not(.focus-mode) .focus-enter-btn.ready{display:flex;}
   #tafsirPanel{flex:1 1 auto;min-height:0 !important;}
   .tafsir-block{font-size:15px;}
 
@@ -4368,23 +4384,29 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       c.appendChild(b);
     }
 
-    /* Explicit, discoverable toggle in the controls row. A hidden tap gesture
-       is undiscoverable on its own, and binding directly here avoids relying
-       on delegated document-level events. */
-    var row = c.querySelector('.pma-row1');
-    if(row && !row.querySelector('#focusToggleBtn')){
-      var t = document.createElement('button');
-      t.id = 'focusToggleBtn';
-      t.type = 'button';
-      t.className = 'mushaf-nav-btn';
-      t.style.cssText = 'background:#1e4e7a;color:#fff;flex:0 0 auto;font-size:14px;font-weight:700;padding:6px 10px;';
-      t.title = 'ملء الشاشة / Full page';
-      t.textContent = '⛶';
-      t.addEventListener('click', function(e){
+    /* Floating "enter full page" button — created as soon as the Mushaf page
+       itself has rendered, so it does NOT wait for the controls row (which
+       only appears once audio/tafsir finish loading, slow on old devices). */
+    if(!c.querySelector('.focus-enter-btn')){
+      var fe = document.createElement('button');
+      fe.className = 'focus-enter-btn';
+      fe.type = 'button';
+      fe.setAttribute('aria-label','ملء الشاشة / Full page');
+      fe.title = 'ملء الشاشة / Full page';
+      fe.textContent = '⛶';
+      fe.addEventListener('click', function(e){
         e.preventDefault(); e.stopPropagation(); setFocusMode(true);
       });
-      row.appendChild(t);
+      c.appendChild(fe);
     }
+    /* Mark it ready (visible) once the page has drawn its words. */
+    var feBtn = c.querySelector('.focus-enter-btn');
+    var hasPage = document.querySelector('#pageModalBody .mushaf-word');
+    if(feBtn) feBtn.classList.toggle('ready', !!hasPage);
+
+    /* The full-page toggle now lives in the floating .focus-enter-btn above,
+       which appears as soon as the page renders rather than waiting for this
+       controls row. So we no longer add a duplicate button into .pma-row1. */
 
     /* Bind tap-to-toggle straight onto the page body as well. */
     var body = document.getElementById('pageModalBody');
