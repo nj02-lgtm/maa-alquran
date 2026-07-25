@@ -4297,17 +4297,53 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   /* Create the restore button once the modal exists. */
   function ensureFocusRestoreBtn(){
     var c = focusContainer();
-    if(!c || c.querySelector('.focus-restore-btn')) return;
-    var b = document.createElement('button');
-    b.className = 'focus-restore-btn';
-    b.type = 'button';
-    b.setAttribute('aria-label','إظهار الأدوات / Show controls');
-    b.title = 'إظهار الأدوات / Show controls';
-    b.textContent = '⚙';
-    c.appendChild(b);
+    if(!c) return;
+    if(!c.querySelector('.focus-restore-btn')){
+      var b = document.createElement('button');
+      b.className = 'focus-restore-btn';
+      b.type = 'button';
+      b.setAttribute('aria-label','إظهار الأدوات / Show controls');
+      b.title = 'إظهار الأدوات / Show controls';
+      b.textContent = '⚙';
+      b.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation(); setFocusMode(false);
+      });
+      c.appendChild(b);
+    }
+
+    /* Explicit, discoverable toggle in the controls row. A hidden tap gesture
+       is undiscoverable on its own, and binding directly here avoids relying
+       on delegated document-level events. */
+    var row = c.querySelector('.pma-row1');
+    if(row && !row.querySelector('#focusToggleBtn')){
+      var t = document.createElement('button');
+      t.id = 'focusToggleBtn';
+      t.type = 'button';
+      t.className = 'mushaf-nav-btn';
+      t.style.cssText = 'background:#1e4e7a;color:#fff;flex-shrink:0;font-size:11px;font-weight:700;';
+      t.textContent = '⛶ ملء الشاشة / Full page';
+      t.addEventListener('click', function(e){
+        e.preventDefault(); e.stopPropagation(); setFocusMode(true);
+      });
+      row.appendChild(t);
+    }
+
+    /* Bind tap-to-toggle straight onto the page body as well. */
+    var body = document.getElementById('pageModalBody');
+    if(body && !body.__focusBound){
+      body.__focusBound = true;
+      body.addEventListener('click', function(ev){
+        if(!MOBILE()) return;
+        if(ev.target.closest &&
+           ev.target.closest('.mushaf-word, .ayah-marker, button, select, a, input')) return;
+        toggleFocusMode();
+      });
+    }
   }
   document.addEventListener('click', function(){ setTimeout(ensureFocusRestoreBtn, 50); }, true);
   setInterval(ensureFocusRestoreBtn, 1200);
+  document.addEventListener('DOMContentLoaded', ensureFocusRestoreBtn);
+  setTimeout(ensureFocusRestoreBtn, 400);
   window.fitMushafSettled = fitMushafSettled;
 
   if(document.fonts && document.fonts.addEventListener){
