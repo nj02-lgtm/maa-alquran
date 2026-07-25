@@ -2170,7 +2170,9 @@ function drawHighlightStrips(wrap, selector, cls){
   });
 }
 function drawAyahHighlight(wrap){ drawHighlightStrips(wrap, '.mushaf-word.active-ayah', 'ayah-hl-strip'); }
+window.drawAyahHighlight = drawAyahHighlight;
 function drawAyahHover(wrap){ drawHighlightStrips(wrap, '.mushaf-word.ayah-hover', 'ayah-hover-strip'); }
+window.drawAyahHover = drawAyahHover;
 
 // Recompute strip positions when the layout changes.
 window.addEventListener('resize', ()=>{
@@ -4277,6 +4279,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
         ln.style.transform = 'scaleX(' + scale.toFixed(4) + ')';
       }
     }
+
+    /* The ayah highlight strips are sized from word offsets captured when the
+       ayah was selected -- i.e. before this fit changed the font size. Left
+       stale they stay at their old, larger dimensions, which overflow:hidden
+       used to conceal. Redraw them so they track the final text size. */
+    try{
+      if(typeof window.drawAyahHighlight === 'function') window.drawAyahHighlight(wrap);
+      if(typeof window.drawAyahHover === 'function') window.drawAyahHover(wrap);
+    }catch(e){}
   }
 
   /* Safari/WebKit can report in-flux widths right after a page renders,
