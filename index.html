@@ -4145,6 +4145,18 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   #pageContentModal.focus-mode .page-modal-content{
     height:100% !important;
   }
+  /* ── Tafsir header (phone) ──────────────────────────────────────────────
+     Two changes only: pull "التفسير / Translation" up closer to the ruler,
+     and put the surah name / ayah number on the same line as it instead of
+     stacked underneath. Fonts, widths and all other spacing are untouched,
+     and the line is allowed to wrap so nothing is ever cut off. */
+  .tafsir-panel-header{
+    padding:3px 16px 5px !important;
+    display:flex !important;align-items:baseline;
+    gap:10px;flex-wrap:wrap;
+  }
+  .tafsir-panel-ayah{margin-top:0 !important;}
+
   /* Small always-visible control so the buttons are never unreachable. */
   .focus-restore-btn{
     position:fixed;left:12px;bottom:12px;z-index:60;
