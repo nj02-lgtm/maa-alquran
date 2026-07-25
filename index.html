@@ -2486,6 +2486,10 @@ window.navigateModal = function(delta) {
     if(typeof window.setFocusMode === 'function') window.setFocusMode(false);
     var _fb = document.getElementById('pageModalBody'); if(_fb) _fb.style.overflow='';
     document.body.classList.add('reading-open');   // hide the floating ☰ while reading
+    /* Freeze the page behind the modal (older WebViews lack :has(), so set it
+       directly): stops the dashboard scrolling into view behind the reader. */
+    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.style.overscrollBehavior = 'none';
     initModalSelectors();
     setTimeout(()=>document.getElementById('closePageModalBtn').focus(),50);
     renderMushafPage(pageNumber);
@@ -2641,6 +2645,9 @@ window.navigateModal = function(delta) {
     document.getElementById('pageContentModal').classList.remove('open');
     document.getElementById('pageContentModal').classList.remove('focus-mode');
     document.body.classList.remove('reading-open');
+    /* Release the page-behind freeze applied when the modal opened. */
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.overscrollBehavior = '';
     const audio=document.getElementById('pageAudioPlayer');audio.pause();audio.src='';
     if(currentFetchController){currentFetchController.abort();currentFetchController=null;}
   }
@@ -4116,6 +4123,20 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   }
   /* While the reading view is open, hide the floating ☰ so it can't cover the
      surah name (the ✕ button is still there to exit). */
+  /* While the reading modal is open, freeze the page behind it. The overlay is
+     position:fixed, but the document underneath could still scroll and
+     overscroll, which let the dashboard show through when the Qur'an page was
+     pushed upwards. This applies in normal reading mode too, not just focus
+     mode. */
+  body.reading-open{
+    overflow:hidden !important;
+    overscroll-behavior:none !important;
+    touch-action:pan-x pan-y;
+  }
+  html:has(body.reading-open){
+    overflow:hidden !important;
+    overscroll-behavior:none !important;
+  }
   body.reading-open .mob-menu-btn{display:none !important;}
   .mushaf-header-label{
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
