@@ -1892,7 +1892,69 @@ async function getAudioUrl(surah, ayah, folder){
   }
 
 
-  async function loadTafsir(verseKey){
+  /* Fetch (and cache) the tafsir text for one ayah. Returns the clean string,
+   or '' on failure. Used by both loadTafsir (display) and prefetchPageTafsir
+   (background warming). Reads the IndexedDB cache first, so a warmed ayah
+   never hits the network again. */
+async function fetchTafsirText(verseKey){
+  if(!currentTafsir || currentTafsir.id === 'none') return '';
+  const [surahNum, ayahNum] = verseKey.split(':');
+  const tkey = `${currentTafsir.id}:${verseKey}`;
+  try{
+    const cached = await OfflineDB.get('tafsir', tkey);
+    if(typeof cached === 'string' && cached) return cached;
+  }catch(e){}
+  let clean = '';
+  try{
+    if(currentTafsir.api === 'ksu'){
+      const res = await fetch(`https://api.quran-tafseer.com/tafseer/1/${surahNum}/${ayahNum}`);
+      if(!res.ok) throw new Error('ksu-fail');
+      const data = await res.json();
+      clean = (data?.text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    } else {
+      const res = await fetch(`${CDN_VERSES}/tafsirs/${currentTafsir.id}/by_ayah/${verseKey}`);
+      if(!res.ok) throw new Error('qurancom-fail');
+      const data = await res.json();
+      const raw = data?.tafsirs?.[0]?.text || data?.tafsir?.text || '';
+      clean = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+  }catch(e){ return ''; }
+  if(clean){ OfflineDB.put('tafsir', tkey, clean).catch(()=>{}); }
+  return clean;
+}
+
+/* Background-warm the tafsir cache for every ayah on the page currently shown,
+   so opening the tafsir panel is instant instead of waiting on the slow
+   api.quran-tafseer.com round-trip. Runs a couple of requests at a time to
+   avoid hammering the API, skips anything already cached, and silently stops
+   if the user navigates to another page. */
+let _prefetchToken = 0;
+async function prefetchPageTafsir(){
+  if(!currentTafsir || currentTafsir.id === 'none') return;
+  const myToken = ++_prefetchToken;
+  const wrap = document.querySelector('#pageModalBody .mushaf-page-wrap');
+  if(!wrap) return;
+  const keys = [];
+  wrap.querySelectorAll('.mushaf-word[data-verse-key]').forEach(w=>{
+    const k = w.dataset.verseKey;
+    if(k && keys.indexOf(k) === -1) keys.push(k);
+  });
+  const CONCURRENCY = 2;
+  let idx = 0;
+  async function worker(){
+    while(idx < keys.length){
+      if(myToken !== _prefetchToken) return;   // a newer page took over
+      const k = keys[idx++];
+      try{ await fetchTafsirText(k); }catch(e){}
+    }
+  }
+  const workers = [];
+  for(let i=0;i<CONCURRENCY;i++) workers.push(worker());
+  try{ await Promise.all(workers); }catch(e){}
+}
+window.prefetchPageTafsir = prefetchPageTafsir;
+
+async function loadTafsir(verseKey){
   const body = document.getElementById('tafsirPanelBody');
   const [surahNum, ayahNum] = verseKey.split(':');
   const si = surahNames[parseInt(surahNum)] || { ar: '', en: '' };
@@ -1906,25 +1968,8 @@ async function getAudioUrl(surah, ayah, folder){
     return;
   }
   body.innerHTML = '<div class="tafsir-loading">⏳ جاري تحميل التفسير...</div>';
-  const tkey = `${currentTafsir.id}:${verseKey}`;
   try{
-    let clean = '';
-    try{ const cached = await OfflineDB.get('tafsir', tkey); if(typeof cached === 'string' && cached) clean = cached; }catch(e){}
-    if(!clean){
-      if(currentTafsir.api === 'ksu'){
-        const res = await fetch(`https://api.quran-tafseer.com/tafseer/1/${surahNum}/${ayahNum}`);
-        if(!res.ok) throw new Error('ksu-fail');
-        const data = await res.json();
-        clean = (data?.text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-      } else {
-        const res = await fetch(`${CDN_VERSES}/tafsirs/${currentTafsir.id}/by_ayah/${verseKey}`);
-        if(!res.ok) throw new Error('qurancom-fail');
-        const data = await res.json();
-        const raw = data?.tafsirs?.[0]?.text || data?.tafsir?.text || '';
-        clean = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-      }
-      if(clean){ OfflineDB.put('tafsir', tkey, clean).catch(()=>{}); }
-    }
+    const clean = await fetchTafsirText(verseKey);
 
     body.innerHTML = clean
       ? `<div class="tafsir-block">
@@ -4511,6 +4556,13 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     new MutationObserver(function(){
       if(raf) cancelAnimationFrame(raf);
       raf = requestAnimationFrame(fitMushafSettled);
+      /* Warm the tafsir cache for this page in the background so opening the
+         panel is instant. Debounced so it runs once after the page settles,
+         not on every mutation. */
+      if(window.__tafsirPrefetchTimer) clearTimeout(window.__tafsirPrefetchTimer);
+      window.__tafsirPrefetchTimer = setTimeout(function(){
+        if(typeof window.prefetchPageTafsir === 'function') window.prefetchPageTafsir();
+      }, 700);
     }).observe(pmb, {childList:true, subtree:true});
   }
   if(document.fonts && document.fonts.ready){
