@@ -1334,6 +1334,7 @@ body.dark .tafsir-selector-row label {
     <select id="reciterSelect"></select>
     <button id="stopPlaybackBtn" class="mushaf-nav-btn" style="background:#9b2c2c;color:white;flex-shrink:0;font-size:11px;font-weight:400;">⏹ إيقاف التشغيل / Stop</button>
     <button id="playPageBtn" class="mushaf-nav-btn" style="background:#d9f5c9;color:#1a1a1a;border:1px solid #5cb85c;flex-shrink:0;font-size:11px;font-weight:700;">▶ تشغيل / Play</button>
+    <button id="fullViewBtn" class="mushaf-nav-btn" title="ملء الشاشة / Full page" style="background:#1e4e7a;color:#fff;flex:0 0 auto;font-size:15px;font-weight:700;padding:6px 10px;">⛶</button>
     <button id="wordPracticeBtn" class="word-practice-btn" style="display:none" title="حدّد الكلمات الصعبة لتدريبها: اضغط الكلمة لتحديدها ومرة أخرى عند حفظها / Mark hard words for practice: tap a word to mark it, tap again once memorized"></button>
     <button id="repeatModeBtn" class="mushaf-nav-btn" style="background:#1f4f7b;color:#fff;border-color:#163c5e;font-size:11px;font-weight:400;padding:6px 10px;flex:0.6;text-align:center;" title="إعدادات التكرار / Set repetition">🔁 تكرار / Repeat</button>
   </div>
@@ -4173,20 +4174,6 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   }
   #pageContentModal.focus-mode .focus-restore-btn{display:flex;}
 
-  /* Floating "enter full page" button. It's fixed and created as soon as the
-     page body has any Mushaf content, so full-screen works immediately on slow
-     devices instead of waiting for the audio/tafsir controls row to load. It
-     hides itself while in focus mode (the gear restores from there). */
-  .focus-enter-btn{
-    position:fixed;right:10px;top:58px;z-index:40;
-    width:34px;height:34px;border-radius:50%;
-    background:rgba(30,78,122,.78);color:#fff;border:none;
-    font-size:17px;cursor:pointer;display:none;
-    align-items:center;justify-content:center;
-    padding:0;line-height:1;text-align:center;
-    box-shadow:0 1px 6px rgba(0,0,0,.25);
-  }
-  #pageContentModal:not(.focus-mode) .focus-enter-btn.ready{display:flex;}
   #tafsirPanel{flex:1 1 auto;min-height:0 !important;}
   .tafsir-block{font-size:15px;}
 
@@ -4392,29 +4379,20 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       c.appendChild(b);
     }
 
-    /* Floating "enter full page" button — created as soon as the Mushaf page
-       itself has rendered, so it does NOT wait for the controls row (which
-       only appears once audio/tafsir finish loading, slow on old devices). */
-    if(!c.querySelector('.focus-enter-btn')){
-      var fe = document.createElement('button');
-      fe.className = 'focus-enter-btn';
-      fe.type = 'button';
-      fe.setAttribute('aria-label','ملء الشاشة / Full page');
-      fe.title = 'ملء الشاشة / Full page';
-      fe.textContent = '⛶';
-      fe.addEventListener('click', function(e){
+    /* Bind the full-view button that sits in the controls row next to Play.
+       It's in the row so it flows with the layout and never covers the page
+       text. Bound here (idempotently) once the row exists. */
+    var fvBtn = document.getElementById('fullViewBtn');
+    if(fvBtn && !fvBtn.__bound){
+      fvBtn.__bound = true;
+      fvBtn.addEventListener('click', function(e){
         e.preventDefault(); e.stopPropagation(); setFocusMode(true);
       });
-      c.appendChild(fe);
     }
-    /* Mark it ready (visible) once the page has drawn its words. */
-    var feBtn = c.querySelector('.focus-enter-btn');
-    var hasPage = document.querySelector('#pageModalBody .mushaf-word');
-    if(feBtn) feBtn.classList.toggle('ready', !!hasPage);
 
-    /* The full-page toggle now lives in the floating .focus-enter-btn above,
-       which appears as soon as the page renders rather than waiting for this
-       controls row. So we no longer add a duplicate button into .pma-row1. */
+    /* The full-page toggle now lives in the #fullViewBtn button in the
+       controls row (next to Play), so it flows with the layout and never
+       covers the page text. */
 
     /* Tap-to-toggle on the page body was removed: it fired on the same tap
        that opened the page (auto-entering full screen) and interfered with
