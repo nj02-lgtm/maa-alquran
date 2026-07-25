@@ -4160,7 +4160,7 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
 
   /* Small always-visible control so the buttons are never unreachable. */
   .focus-restore-btn{
-    position:fixed;right:12px;bottom:72px;z-index:60;
+    position:fixed;right:10px;bottom:10px;z-index:1090;
     width:40px;height:40px;border-radius:50%;
     background:rgba(30,78,122,.92);color:#fff;border:none;
     font-size:20px;cursor:pointer;display:none;
@@ -4175,13 +4175,13 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
      devices instead of waiting for the audio/tafsir controls row to load. It
      hides itself while in focus mode (the gear restores from there). */
   .focus-enter-btn{
-    position:fixed;right:12px;bottom:72px;z-index:59;
-    width:40px;height:40px;border-radius:50%;
-    background:rgba(30,78,122,.92);color:#fff;border:none;
-    font-size:20px;cursor:pointer;display:none;
+    position:fixed;right:10px;top:58px;z-index:40;
+    width:34px;height:34px;border-radius:50%;
+    background:rgba(30,78,122,.78);color:#fff;border:none;
+    font-size:17px;cursor:pointer;display:none;
     align-items:center;justify-content:center;
     padding:0;line-height:1;text-align:center;
-    box-shadow:0 2px 10px rgba(0,0,0,.3);
+    box-shadow:0 1px 6px rgba(0,0,0,.25);
   }
   #pageContentModal:not(.focus-mode) .focus-enter-btn.ready{display:flex;}
   #tafsirPanel{flex:1 1 auto;min-height:0 !important;}
@@ -4348,8 +4348,17 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var c = focusContainer();
     if(!c) return;
     c.classList.toggle('focus-mode', !!on);
-    /* Height changed, so re-run the fit for the new available space. */
-    if(typeof fitMushafSettled === 'function') fitMushafSettled();
+    /* Lock the page body scroll position at the top in focus mode so pushing
+       the page up can't reveal the dashboard underneath (issue: overscroll
+       showed the bottom of the underlying dashboard). */
+    var body = document.getElementById('pageModalBody');
+    if(body){
+      if(on){ body.style.overflow = 'hidden'; }
+      else  { body.style.overflow = ''; }
+    }
+    /* NB: we deliberately do NOT re-run fitMushafSettled() here. The font
+       already fits; re-running it on every toggle made entering full screen
+       slow and re-kicked the tafsir/relayout path. */
   }
   function toggleFocusMode(){
     var c = focusContainer();
@@ -4361,10 +4370,6 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     if(ev.target.closest && ev.target.closest('.focus-restore-btn')){
       setFocusMode(false);
     }
-    /* The page-tap toggle is bound directly to #pageModalBody in
-       ensureFocusRestoreBtn(). It used to be handled here as well, so every
-       tap fired the toggle twice and cancelled itself out -- which is why
-       full-screen mode often looked unresponsive. */
   }, true);
 
   /* Create the restore button once the modal exists. */
@@ -4408,17 +4413,10 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
        which appears as soon as the page renders rather than waiting for this
        controls row. So we no longer add a duplicate button into .pma-row1. */
 
-    /* Bind tap-to-toggle straight onto the page body as well. */
-    var body = document.getElementById('pageModalBody');
-    if(body && !body.__focusBound){
-      body.__focusBound = true;
-      body.addEventListener('click', function(ev){
-        if(!MOBILE()) return;
-        if(ev.target.closest &&
-           ev.target.closest('.mushaf-word, .ayah-marker, button, select, a, input')) return;
-        toggleFocusMode();
-      });
-    }
+    /* Tap-to-toggle on the page body was removed: it fired on the same tap
+       that opened the page (auto-entering full screen) and interfered with
+       reaching the close button. Full screen is entered/exited only via the
+       explicit ⛶ / ⚙ buttons, which is predictable. */
 
     /* ── Play/Stop merged into one toggle ──────────────────────────────────
        Two separate buttons pushed the controls onto three rows on a phone.
