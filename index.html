@@ -4249,20 +4249,30 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     }
 
     /* Last-resort safety net: if a line STILL overflows once the font hits its
-       floor, the line's overflow:hidden would silently clip words off the edge
-       -- losing Qur'an text, which must never happen. Squeeze just that line
-       horizontally instead so every word stays visible and readable. */
+       floor, the line's overflow:hidden would silently clip words off the left
+       edge -- losing Qur'an text, which must never happen. Squeeze just that
+       line horizontally so every word stays visible.
+
+       Critically, overflow must be switched to visible on any line we scale:
+       CSS clips an element's content in its own coordinate system BEFORE the
+       transform is applied, so scaling a clipped line just shrinks the
+       already-truncated result and the missing words never reappear. With the
+       clip off, the scaled content lands exactly inside the line's width. */
     for(var s=0;s<lines.length;s++){
       var ln = lines[s];
       ln.style.transform = '';
       ln.style.transformOrigin = '';
+      ln.style.overflow = '';
       var ws = ln.querySelectorAll('.mushaf-word');
       if(!ws.length) continue;
       var total = 0;
       for(var q=0;q<ws.length;q++) total += ws[q].getBoundingClientRect().width;
       var room = ln.getBoundingClientRect().width - 8;
       if(total > room + 1 && total > 0){
-        var scale = Math.max(0.72, room / total);   /* never squash unreadably */
+        /* Allow a firm squeeze: showing every word matters more than a
+           slightly narrower glyph on the rare over-full line. */
+        var scale = Math.max(0.6, room / total);
+        ln.style.overflow = 'visible';
         ln.style.transformOrigin = 'right center';  /* RTL: anchor at right */
         ln.style.transform = 'scaleX(' + scale.toFixed(4) + ')';
       }
