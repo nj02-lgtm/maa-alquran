@@ -2415,6 +2415,7 @@ window.navigateModal = function(delta) {
     audioIntent = false;   // open in read mode; audio waits for Play
     document.getElementById('pageContentModal').classList.add('open');
     document.getElementById('pageContentModal').classList.remove('focus-mode');
+    if(typeof window.setFocusMode === 'function') window.setFocusMode(false);
     var _fb = document.getElementById('pageModalBody'); if(_fb) _fb.style.overflow='';
     document.body.classList.add('reading-open');   // hide the floating ☰ while reading
     initModalSelectors();
@@ -2568,6 +2569,7 @@ window.navigateModal = function(delta) {
   })();
 
   function closePageModal(){
+    if(typeof window.setFocusMode === 'function') window.setFocusMode(false);   /* release scroll lock */
     document.getElementById('pageContentModal').classList.remove('open');
     document.getElementById('pageContentModal').classList.remove('focus-mode');
     document.body.classList.remove('reading-open');
@@ -4141,6 +4143,22 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
      audio panel is a sibling of .page-modal-content, not a child of it. ── */
   #pageContentModal.focus-mode #pageModalBody{
     height:100% !important;flex:1 1 auto !important;
+    overscroll-behavior:none !important;   /* no rubber-band past the ends */
+    -webkit-overflow-scrolling:auto !important;
+  }
+  /* In focus mode the modal box fills the whole screen and is locked in place,
+     so pushing the page up can't rubber-band and reveal the dashboard beneath.
+     The overlay itself also blocks overscroll chaining to the page behind. */
+  #pageContentModal.focus-mode{
+    padding:0 !important;
+    overscroll-behavior:none !important;
+  }
+  #pageContentModal.focus-mode .page-modal-box{
+    position:fixed !important;inset:0 !important;
+    width:100% !important;height:100% !important;
+    max-width:none !important;max-height:none !important;
+    margin:0 !important;border-radius:0 !important;
+    overscroll-behavior:none !important;
   }
   #pageContentModal.focus-mode .tafsir-panel,
   #pageContentModal.focus-mode .mushaf-splitter,
@@ -4338,22 +4356,45 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var c = focusContainer();
     if(!c) return;
     c.classList.toggle('focus-mode', !!on);
-    /* Lock the page body scroll position at the top in focus mode so pushing
-       the page up can't reveal the dashboard underneath (issue: overscroll
-       showed the bottom of the underlying dashboard). */
     var body = document.getElementById('pageModalBody');
     if(body){
       if(on){ body.style.overflow = 'hidden'; }
       else  { body.style.overflow = ''; }
     }
-    /* NB: we deliberately do NOT re-run fitMushafSettled() here. The font
-       already fits; re-running it on every toggle made entering full screen
-       slow and re-kicked the tafsir/relayout path. */
+    /* Freeze the whole document while in focus mode: on some mobile browsers
+       the page/viewport itself can rubber-band and reveal the dashboard
+       underneath even when the inner panel is locked. Fixing the <body>
+       position prevents any viewport movement; we restore scroll on exit. */
+    if(on){
+      if(document.body.getAttribute('data-focus-locked') !== '1'){
+        document.body.setAttribute('data-focus-scroll', String(window.scrollY||0));
+        document.body.setAttribute('data-focus-locked','1');
+        document.body.style.position = 'fixed';
+        document.body.style.top = '0';
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.style.width = '100%';
+        document.documentElement.style.overscrollBehavior = 'none';
+      }
+    } else {
+      if(document.body.getAttribute('data-focus-locked') === '1'){
+        document.body.removeAttribute('data-focus-locked');
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+        document.documentElement.style.overscrollBehavior = '';
+        var y = parseInt(document.body.getAttribute('data-focus-scroll')||'0',10);
+        window.scrollTo(0, y);
+      }
+    }
   }
   function toggleFocusMode(){
     var c = focusContainer();
     if(c) setFocusMode(!c.classList.contains('focus-mode'));
   }
+  window.setFocusMode = setFocusMode;
 
   document.addEventListener('click', function(ev){
     if(!MOBILE()) return;
