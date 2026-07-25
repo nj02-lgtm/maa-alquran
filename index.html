@@ -4115,6 +4115,26 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
     flex:0 0 auto;height:58%;min-height:0 !important;
     border-left:none;border-bottom:none;
   }
+
+  /* ── Focus mode: tap the page (not a word) to hide the controls and tafsir
+     panel so the Mushaf fills the screen, the way printed-page Qur'an apps
+     behave. Tap again to bring them back. ── */
+  .page-modal-content.focus-mode #pageModalBody{
+    height:100% !important;flex:1 1 auto !important;
+  }
+  .page-modal-content.focus-mode .tafsir-panel,
+  .page-modal-content.focus-mode .page-modal-audio{
+    display:none !important;
+  }
+  /* Small always-visible hint so the controls are never unreachable. */
+  .focus-restore-btn{
+    position:fixed;left:12px;bottom:12px;z-index:60;
+    width:44px;height:44px;border-radius:50%;
+    background:rgba(30,78,122,.92);color:#fff;border:none;
+    font-size:19px;line-height:1;cursor:pointer;display:none;
+    box-shadow:0 2px 10px rgba(0,0,0,.3);
+  }
+  .page-modal-content.focus-mode .focus-restore-btn{display:block;}
   #tafsirPanel{flex:1 1 auto;min-height:0 !important;}
   .tafsir-block{font-size:15px;}
 
@@ -4158,8 +4178,13 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
        larger with tighter word gaps; shrinking only happens when a line
        genuinely overflows, because every 0.5px shaved off the font is space
        that justify-content:space-between then spreads out as wider gaps. */
-    var BASE  = (pg === '1' || pg === '2') ? 26 : 20;
-    var FLOOR = (pg === '1' || pg === '2') ? 18 : 15;
+    /* Pages 1 & 2 (Al-Fatihah / start of Al-Baqarah) are printed larger in the
+       Mushaf, but they were starting at 26px with an 18px floor -- when 18px
+       was still too wide the excess was simply clipped by the line's
+       overflow:hidden, cutting words like آلمٓ and أُوْلَٰٓئِكَ off at the edge.
+       A lower floor lets them shrink enough to actually fit. */
+    var BASE  = (pg === '1' || pg === '2') ? 23 : 20;
+    var FLOOR = (pg === '1' || pg === '2') ? 14 : 15;
 
     var fs = BASE;
     wrap.style.setProperty('--mushaf-fs', fs + 'px');
@@ -4191,6 +4216,26 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       wrap.style.setProperty('--mushaf-fs', fs + 'px');
       guard++;
     }
+
+    /* Last-resort safety net: if a line STILL overflows once the font hits its
+       floor, the line's overflow:hidden would silently clip words off the edge
+       -- losing Qur'an text, which must never happen. Squeeze just that line
+       horizontally instead so every word stays visible and readable. */
+    for(var s=0;s<lines.length;s++){
+      var ln = lines[s];
+      ln.style.transform = '';
+      ln.style.transformOrigin = '';
+      var ws = ln.querySelectorAll('.mushaf-word');
+      if(!ws.length) continue;
+      var total = 0;
+      for(var q=0;q<ws.length;q++) total += ws[q].getBoundingClientRect().width;
+      var room = ln.getBoundingClientRect().width - 8;
+      if(total > room + 1 && total > 0){
+        var scale = Math.max(0.72, room / total);   /* never squash unreadably */
+        ln.style.transformOrigin = 'right center';  /* RTL: anchor at right */
+        ln.style.transform = 'scaleX(' + scale.toFixed(4) + ')';
+      }
+    }
   }
 
   /* Safari/WebKit can report in-flux widths right after a page renders,
@@ -4207,6 +4252,56 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     fitMushaf();
     [150, 600, 1500, 3000].forEach(function(ms){ setTimeout(fitMushaf, ms); });
   }
+
+  /* ── Focus mode ──────────────────────────────────────────────────────────
+     The controls and tafsir panel take roughly 40% of a phone screen, leaving
+     the Mushaf only 58% of the height. Tapping the page background (never a
+     word -- words still open tafsir / mark for practice) collapses them so the
+     page fills the screen, as printed-page Qur'an apps do. A floating button
+     restores them, so the controls can never become unreachable. */
+  function focusContainer(){
+    return document.querySelector('.page-modal-content');
+  }
+  function setFocusMode(on){
+    var c = focusContainer();
+    if(!c) return;
+    c.classList.toggle('focus-mode', !!on);
+    /* Height changed, so re-run the fit for the new available space. */
+    if(typeof fitMushafSettled === 'function') fitMushafSettled();
+  }
+  function toggleFocusMode(){
+    var c = focusContainer();
+    if(c) setFocusMode(!c.classList.contains('focus-mode'));
+  }
+
+  document.addEventListener('click', function(ev){
+    if(!MOBILE()) return;
+    var body = document.getElementById('pageModalBody');
+    if(!body) return;
+
+    if(ev.target.closest && ev.target.closest('.focus-restore-btn')){
+      setFocusMode(false); return;
+    }
+    if(!body.contains(ev.target)) return;
+    /* Never hijack a tap meant for a word, ayah marker, or any control. */
+    if(ev.target.closest('.mushaf-word, .ayah-marker, button, select, a, input')) return;
+    toggleFocusMode();
+  }, true);
+
+  /* Create the restore button once the modal exists. */
+  function ensureFocusRestoreBtn(){
+    var c = focusContainer();
+    if(!c || c.querySelector('.focus-restore-btn')) return;
+    var b = document.createElement('button');
+    b.className = 'focus-restore-btn';
+    b.type = 'button';
+    b.setAttribute('aria-label','إظهار الأدوات / Show controls');
+    b.title = 'إظهار الأدوات / Show controls';
+    b.textContent = '⚙';
+    c.appendChild(b);
+  }
+  document.addEventListener('click', function(){ setTimeout(ensureFocusRestoreBtn, 50); }, true);
+  setInterval(ensureFocusRestoreBtn, 1200);
   window.fitMushafSettled = fitMushafSettled;
 
   if(document.fonts && document.fonts.addEventListener){
