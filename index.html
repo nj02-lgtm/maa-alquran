@@ -1335,7 +1335,7 @@ body.dark .tafsir-selector-row label {
     <button id="stopPlaybackBtn" class="mushaf-nav-btn" style="background:#9b2c2c;color:white;flex-shrink:0;font-size:11px;font-weight:400;">⏹ إيقاف التشغيل / Stop</button>
     <button id="playPageBtn" class="mushaf-nav-btn" style="background:#d9f5c9;color:#1a1a1a;border:1px solid #5cb85c;flex-shrink:0;font-size:11px;font-weight:700;">▶ تشغيل / Play</button>
     <button id="wordPracticeBtn" class="word-practice-btn" style="display:none" title="حدّد الكلمات الصعبة لتدريبها: اضغط الكلمة لتحديدها ومرة أخرى عند حفظها / Mark hard words for practice: tap a word to mark it, tap again once memorized"></button>
-    <button id="repeatModeBtn" class="mushaf-nav-btn" style="background:#1f4f7b;color:#fff;border-color:#163c5e;font-size:11px;font-weight:400;padding:6px 10px;flex:0.6;text-align:center;" title="إعدادات التكرار / Set repetition">🔁 إعدادات التكرار / Repeat settings</button>
+    <button id="repeatModeBtn" class="mushaf-nav-btn" style="background:#1f4f7b;color:#fff;border-color:#163c5e;font-size:11px;font-weight:400;padding:6px 10px;flex:0.6;text-align:center;" title="إعدادات التكرار / Set repetition">🔁 التكرار / Repeat</button>
   </div>
   <div class="pma-row2">
     <span id="playbackStatus" style="font-size:11px;color:#4a3a1a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
@@ -2259,7 +2259,7 @@ window.navigateModal = function(delta) {
     const cnt=weakSetFor(page).size;
     b.style.display='';   // available on every page, whatever its memorization level
     b.classList.toggle('on',wordPracticeMode);
-    b.textContent=wordPracticeMode?('⏹ إيقاف التثبيت / Stop marking'+(cnt?` (${cnt})`:'')):('🖍️ انقر لتحديد كلمات للحفظ / Mark words to memorize'+(cnt?` (${cnt})`:''));
+    b.textContent=wordPracticeMode?('⏹ إيقاف / Stop'+(cnt?` (${cnt})`:'')):('🖍️ تحديد كلمات / Mark words'+(cnt?` (${cnt})`:''));
   }
 
   async function renderMushafPage(page){
@@ -4080,7 +4080,8 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
     text-align:center;
   }
   /* Play before Stop (reading order matches the visual left-to-right pair) */
-  .page-modal-audio #playPageBtn{order:1;}
+  .page-modal-audio #stopPlaybackBtn{display:none !important;}
+  .page-modal-audio #playPageBtn{order:1;flex:1 1 auto;min-width:110px;}
   .page-modal-audio #stopPlaybackBtn{order:2;}
   .page-modal-audio #wordPracticeBtn{order:3;}
   .page-modal-audio #repeatModeBtn{order:4;}
@@ -4320,8 +4321,9 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       t.id = 'focusToggleBtn';
       t.type = 'button';
       t.className = 'mushaf-nav-btn';
-      t.style.cssText = 'background:#1e4e7a;color:#fff;flex-shrink:0;font-size:11px;font-weight:700;';
-      t.textContent = '⛶ ملء الشاشة / Full page';
+      t.style.cssText = 'background:#1e4e7a;color:#fff;flex:0 0 auto;font-size:14px;font-weight:700;padding:6px 10px;';
+      t.title = 'ملء الشاشة / Full page';
+      t.textContent = '⛶';
       t.addEventListener('click', function(e){
         e.preventDefault(); e.stopPropagation(); setFocusMode(true);
       });
@@ -4338,6 +4340,58 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
            ev.target.closest('.mushaf-word, .ayah-marker, button, select, a, input')) return;
         toggleFocusMode();
       });
+    }
+
+    /* ── Play/Stop merged into one toggle ──────────────────────────────────
+       Two separate buttons pushed the controls onto three rows on a phone.
+       The separate Stop button is hidden on mobile (CSS) and Play becomes a
+       toggle: it starts playback, and stops it while playing. The original
+       handlers are left untouched -- this intercepts in the capture phase and
+       forwards to the Stop button when audio is running. */
+    var playBtn = document.getElementById('playPageBtn');
+    if(playBtn && !playBtn.__toggleBound){
+      playBtn.__toggleBound = true;
+
+      var isPlaying = function(){
+        var a = document.getElementById('pageAudioPlayer');
+        return !!(a && !a.paused && !a.ended && a.currentTime > 0);
+      };
+      var refreshPlayLabel = function(){
+        if(!MOBILE()) return;
+        if(isPlaying()){
+          playBtn.textContent = '⏹ إيقاف / Stop';
+          playBtn.style.background = '#9b2c2c';
+          playBtn.style.color = '#fff';
+          playBtn.style.border = '1px solid #7d2323';
+        } else {
+          playBtn.textContent = '▶ تشغيل / Play';
+          playBtn.style.background = '#d9f5c9';
+          playBtn.style.color = '#1a1a1a';
+          playBtn.style.border = '1px solid #5cb85c';
+        }
+      };
+
+      playBtn.addEventListener('click', function(e){
+        if(!MOBILE()) return;
+        if(isPlaying()){
+          e.preventDefault();
+          e.stopImmediatePropagation();   /* don't run the original Play handler */
+          var sb = document.getElementById('stopPlaybackBtn');
+          if(sb) sb.click();
+          setTimeout(refreshPlayLabel, 60);
+        } else {
+          setTimeout(refreshPlayLabel, 120);
+        }
+      }, true);
+
+      var au = document.getElementById('pageAudioPlayer');
+      if(au){
+        ['play','playing','pause','ended','emptied'].forEach(function(evt){
+          au.addEventListener(evt, function(){ setTimeout(refreshPlayLabel, 20); });
+        });
+      }
+      refreshPlayLabel();
+      setInterval(refreshPlayLabel, 1000);
     }
   }
   document.addEventListener('click', function(){ setTimeout(ensureFocusRestoreBtn, 50); }, true);
