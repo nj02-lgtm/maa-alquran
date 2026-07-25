@@ -4178,10 +4178,23 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   }
   /* Play before Stop (reading order matches the visual left-to-right pair) */
   .page-modal-audio #stopPlaybackBtn{display:none !important;}
+  /* Equal button heights: some labels wrap to two lines ("كلمات / Words",
+     "تكبير / Full") while others fit on one ("تشغيل / Play", "تكرار / Repeat"),
+     so the buttons rendered at different heights. Stretching the row makes
+     every button match the tallest one. The base .mushaf-nav-btn height:26px
+     has to become auto for stretch to take effect. */
+  .page-modal-audio .pma-row1{align-items:stretch !important;}
+  .page-modal-audio #playPageBtn,
+  .page-modal-audio #wordPracticeBtn,
+  .page-modal-audio #repeatModeBtn,
+  .page-modal-audio #fullViewBtn{
+    height:auto !important;min-height:0 !important;max-height:none !important;
+    align-self:stretch !important;
+  }
   /* Reciter select takes its own line; the three action buttons then share a
      single row below it. Equal flex with a small min-width keeps them even
      and stops any one label from pushing the others to a second row. */
-  .page-modal-audio .pma-row1 #reciterSelect{flex:1 1 100% !important;min-width:0;}
+  .page-modal-audio .pma-row1 #reciterSelect{flex:1 1 100% !important;min-width:0;align-self:auto !important;}
   .page-modal-audio #playPageBtn,
   .page-modal-audio #wordPracticeBtn,
   .page-modal-audio #repeatModeBtn{
