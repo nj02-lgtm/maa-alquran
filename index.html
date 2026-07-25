@@ -4145,6 +4145,29 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   #pageContentModal.focus-mode .page-modal-content{
     height:100% !important;
   }
+  /* ── Compact tafsir panel (phone) ───────────────────────────────────────
+     The header stacked "التفسير / Translation" and the surah/ayah line as two
+     rows, with generous padding above and below the ruler. Between them, the
+     ruler, header and selector row were eating roughly half the panel before
+     any translation text appeared. Put the title and surah name on one line
+     and trim the padding so the text itself gets the space. */
+  .tafsir-panel-header{
+    padding:4px 12px !important;
+    display:flex !important;align-items:baseline;justify-content:space-between;
+    gap:8px;flex-wrap:nowrap;
+  }
+  .tafsir-panel-title{
+    font-size:12px !important;flex:0 0 auto;white-space:nowrap;
+  }
+  .tafsir-panel-ayah{
+    margin-top:0 !important;font-size:10.5px !important;
+    flex:1 1 auto;min-width:0;text-align:left;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .tafsir-selector-row{padding:4px 12px !important;gap:6px !important;}
+  .tafsir-panel-body{padding:8px 12px !important;}
+  .mushaf-splitter{flex:0 0 16px !important;height:16px !important;}
+
   /* Small always-visible control so the buttons are never unreachable. */
   .focus-restore-btn{
     position:fixed;left:12px;bottom:12px;z-index:60;
