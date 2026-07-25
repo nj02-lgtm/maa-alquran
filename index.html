@@ -1896,7 +1896,16 @@ async function getAudioUrl(surah, ayah, folder){
    or '' on failure. Used by both loadTafsir (display) and prefetchPageTafsir
    (background warming). Reads the IndexedDB cache first, so a warmed ayah
    never hits the network again. */
-async function fetchTafsirText(verseKey){
+/* True while the user is actively waiting for a tafsir they tapped. Background
+   prefetching pauses while this is set, so a user's request never queues behind
+   ~10 background requests to the slow tafsir API. */
+let _tafsirUserBusy = false;
+
+/* Fetch (and cache) one ayah's tafsir. `opts.timeout` aborts slow requests so a
+   hanging API can't leave the panel spinning; `opts.background` marks prefetch
+   traffic, which uses a shorter timeout and yields to user requests. */
+async function fetchTafsirText(verseKey, opts){
+  opts = opts || {};
   if(!currentTafsir || currentTafsir.id === 'none') return '';
   const [surahNum, ayahNum] = verseKey.split(':');
   const tkey = `${currentTafsir.id}:${verseKey}`;
@@ -1904,21 +1913,28 @@ async function fetchTafsirText(verseKey){
     const cached = await OfflineDB.get('tafsir', tkey);
     if(typeof cached === 'string' && cached) return cached;
   }catch(e){}
+
+  const ms = opts.timeout || (opts.background ? 7000 : 15000);
+  const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const timer = setTimeout(function(){ try{ ctrl && ctrl.abort(); }catch(e){} }, ms);
+  const fopts = ctrl ? { signal: ctrl.signal } : {};
+
   let clean = '';
   try{
     if(currentTafsir.api === 'ksu'){
-      const res = await fetch(`https://api.quran-tafseer.com/tafseer/1/${surahNum}/${ayahNum}`);
+      const res = await fetch(`https://api.quran-tafseer.com/tafseer/1/${surahNum}/${ayahNum}`, fopts);
       if(!res.ok) throw new Error('ksu-fail');
       const data = await res.json();
       clean = (data?.text || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     } else {
-      const res = await fetch(`${CDN_VERSES}/tafsirs/${currentTafsir.id}/by_ayah/${verseKey}`);
+      const res = await fetch(`${CDN_VERSES}/tafsirs/${currentTafsir.id}/by_ayah/${verseKey}`, fopts);
       if(!res.ok) throw new Error('qurancom-fail');
       const data = await res.json();
       const raw = data?.tafsirs?.[0]?.text || data?.tafsir?.text || '';
       clean = raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     }
-  }catch(e){ return ''; }
+  }catch(e){ clearTimeout(timer); return ''; }
+  clearTimeout(timer);
   if(clean){ OfflineDB.put('tafsir', tkey, clean).catch(()=>{}); }
   return clean;
 }
@@ -1939,18 +1955,20 @@ async function prefetchPageTafsir(){
     const k = w.dataset.verseKey;
     if(k && keys.indexOf(k) === -1) keys.push(k);
   });
-  const CONCURRENCY = 2;
-  let idx = 0;
-  async function worker(){
-    while(idx < keys.length){
-      if(myToken !== _prefetchToken) return;   // a newer page took over
-      const k = keys[idx++];
-      try{ await fetchTafsirText(k); }catch(e){}
+  /* ONE request at a time. Running several in parallel against the slow tafsir
+     API meant a tap by the user queued behind them, making the panel feel
+     slower than before prefetching existed. */
+  const wait = (ms)=>new Promise(r=>setTimeout(r,ms));
+  for(let n=0;n<keys.length;n++){
+    if(myToken !== _prefetchToken) return;        // a newer page took over
+    /* Always yield to a tafsir the user is actually waiting for. */
+    while(_tafsirUserBusy){
+      await wait(300);
+      if(myToken !== _prefetchToken) return;
     }
+    try{ await fetchTafsirText(keys[n], {background:true}); }catch(e){}
+    await wait(250);                              // breathe between requests
   }
-  const workers = [];
-  for(let i=0;i<CONCURRENCY;i++) workers.push(worker());
-  try{ await Promise.all(workers); }catch(e){}
 }
 window.prefetchPageTafsir = prefetchPageTafsir;
 
@@ -1968,6 +1986,9 @@ async function loadTafsir(verseKey){
     return;
   }
   body.innerHTML = '<div class="tafsir-loading">⏳ جاري تحميل التفسير...</div>';
+  /* Mark that the user is waiting, so background prefetching pauses and this
+     request gets the connection to itself. Cleared in the finally below. */
+  _tafsirUserBusy = true;
   try{
     const clean = await fetchTafsirText(verseKey);
 
@@ -1979,6 +2000,8 @@ async function loadTafsir(verseKey){
       : '<div class="tafsir-placeholder"><div class="tafsir-placeholder-icon">🔍</div><div>لا يوجد تفسير لهذه الآية</div></div>';
   } catch(e){
     body.innerHTML = '<div class="tafsir-placeholder"><div class="tafsir-placeholder-icon">⚠️</div><div>تعذّر تحميل التفسير</div></div>';
+  } finally {
+    _tafsirUserBusy = false;   // let background prefetching resume
   }
 }
 
@@ -4570,7 +4593,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       if(window.__tafsirPrefetchTimer) clearTimeout(window.__tafsirPrefetchTimer);
       window.__tafsirPrefetchTimer = setTimeout(function(){
         if(typeof window.prefetchPageTafsir === 'function') window.prefetchPageTafsir();
-      }, 700);
+      }, 2500);   /* start well after the page has settled, so prefetch never competes with page/font loading */
     }).observe(pmb, {childList:true, subtree:true});
   }
   if(document.fonts && document.fonts.ready){
