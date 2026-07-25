@@ -2413,6 +2413,8 @@ window.navigateModal = function(delta) {
     _modalTargetVerse = targetVerseKey || null;
     audioIntent = false;   // open in read mode; audio waits for Play
     document.getElementById('pageContentModal').classList.add('open');
+    document.getElementById('pageContentModal').classList.remove('focus-mode');
+    var _fb = document.getElementById('pageModalBody'); if(_fb) _fb.style.overflow='';
     document.body.classList.add('reading-open');   // hide the floating ☰ while reading
     initModalSelectors();
     setTimeout(()=>document.getElementById('closePageModalBtn').focus(),50);
@@ -2566,6 +2568,7 @@ window.navigateModal = function(delta) {
 
   function closePageModal(){
     document.getElementById('pageContentModal').classList.remove('open');
+    document.getElementById('pageContentModal').classList.remove('focus-mode');
     document.body.classList.remove('reading-open');
     const audio=document.getElementById('pageAudioPlayer');audio.pause();audio.src='';
     if(currentFetchController){currentFetchController.abort();currentFetchController=null;}
