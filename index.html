@@ -4424,14 +4424,17 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     } else {
       if(document.body.getAttribute('data-focus-locked') === '1'){
         document.body.removeAttribute('data-focus-locked');
+        var y = parseInt(document.body.getAttribute('data-focus-scroll')||'0',10);
         document.body.style.position = '';
         document.body.style.top = '';
         document.body.style.left = '';
         document.body.style.right = '';
         document.body.style.width = '';
         document.documentElement.style.overscrollBehavior = '';
-        var y = parseInt(document.body.getAttribute('data-focus-scroll')||'0',10);
-        window.scrollTo(0, y);
+        /* Restore scroll on the next frame: doing it in the same tick, while
+           iOS is still tearing down position:fixed, can leave the page in a
+           half-scrolled state and is part of why exit needed several taps. */
+        requestAnimationFrame(function(){ window.scrollTo(0, y); });
       }
     }
   }
@@ -4441,12 +4444,11 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   }
   window.setFocusMode = setFocusMode;
 
-  document.addEventListener('click', function(ev){
-    if(!MOBILE()) return;
-    if(ev.target.closest && ev.target.closest('.focus-restore-btn')){
-      setFocusMode(false);
-    }
-  }, true);
+  /* The gear (restore) button has its own direct click handler bound in
+     ensureFocusRestoreBtn(). It used to ALSO be handled by this document
+     capture listener, so each tap fired setFocusMode(false) twice, which on
+     iOS Safari left the frozen-body exit in a half-state and needed several
+     taps. The direct handler alone is reliable. */
 
   /* Create the restore button once the modal exists. */
   function ensureFocusRestoreBtn(){
@@ -4459,9 +4461,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       b.setAttribute('aria-label','إظهار الأدوات / Show controls');
       b.title = 'إظهار الأدوات / Show controls';
       b.textContent = '⚙';
-      b.addEventListener('click', function(e){
-        e.preventDefault(); e.stopPropagation(); setFocusMode(false);
-      });
+      var exitFocus = function(e){
+        if(e){ e.preventDefault(); e.stopPropagation(); }
+        setFocusMode(false);
+      };
+      /* touchend fires immediately on iOS; click can be delayed or dropped when
+         it lands on a fixed overlay above a position:fixed body, which is why
+         the gear needed several taps on iPhone. Handle both, de-duplicated. */
+      b.addEventListener('touchend', function(e){ exitFocus(e); }, {passive:false});
+      b.addEventListener('click', function(e){ exitFocus(e); });
       c.appendChild(b);
     }
 
