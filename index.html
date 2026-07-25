@@ -1335,7 +1335,7 @@ body.dark .tafsir-selector-row label {
     <button id="stopPlaybackBtn" class="mushaf-nav-btn" style="background:#9b2c2c;color:white;flex-shrink:0;font-size:11px;font-weight:400;">⏹ إيقاف التشغيل / Stop</button>
     <button id="playPageBtn" class="mushaf-nav-btn" style="background:#d9f5c9;color:#1a1a1a;border:1px solid #5cb85c;flex-shrink:0;font-size:11px;font-weight:700;">▶ تشغيل / Play</button>
     <button id="wordPracticeBtn" class="word-practice-btn" style="display:none" title="حدّد الكلمات الصعبة لتدريبها: اضغط الكلمة لتحديدها ومرة أخرى عند حفظها / Mark hard words for practice: tap a word to mark it, tap again once memorized"></button>
-    <button id="repeatModeBtn" class="mushaf-nav-btn" style="background:#1f4f7b;color:#fff;border-color:#163c5e;font-size:11px;font-weight:400;padding:6px 10px;flex:0.6;text-align:center;" title="إعدادات التكرار / Set repetition">🔁 التكرار / Repeat</button>
+    <button id="repeatModeBtn" class="mushaf-nav-btn" style="background:#1f4f7b;color:#fff;border-color:#163c5e;font-size:11px;font-weight:400;padding:6px 10px;flex:0.6;text-align:center;" title="إعدادات التكرار / Set repetition">🔁 تكرار / Repeat</button>
   </div>
   <div class="pma-row2">
     <span id="playbackStatus" style="font-size:11px;color:#4a3a1a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
@@ -2259,7 +2259,7 @@ window.navigateModal = function(delta) {
     const cnt=weakSetFor(page).size;
     b.style.display='';   // available on every page, whatever its memorization level
     b.classList.toggle('on',wordPracticeMode);
-    b.textContent=wordPracticeMode?('⏹ إيقاف / Stop'+(cnt?` (${cnt})`:'')):('🖍️ تحديد كلمات / Mark words'+(cnt?` (${cnt})`:''));
+    b.textContent=wordPracticeMode?('⏹ إيقاف / Stop'+(cnt?` (${cnt})`:'')):('🖍️ كلمات / Words'+(cnt?` (${cnt})`:''));
   }
 
   async function renderMushafPage(page){
@@ -4081,7 +4081,19 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   }
   /* Play before Stop (reading order matches the visual left-to-right pair) */
   .page-modal-audio #stopPlaybackBtn{display:none !important;}
-  .page-modal-audio #playPageBtn{order:1;flex:1 1 auto;min-width:110px;}
+  /* Reciter select takes its own line; the three action buttons then share a
+     single row below it. Equal flex with a small min-width keeps them even
+     and stops any one label from pushing the others to a second row. */
+  .page-modal-audio .pma-row1 #reciterSelect{flex:1 1 100% !important;min-width:0;}
+  .page-modal-audio #playPageBtn,
+  .page-modal-audio #wordPracticeBtn,
+  .page-modal-audio #repeatModeBtn{
+    flex:1 1 0 !important;min-width:0 !important;
+    padding:6px 4px !important;font-size:10.5px !important;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .page-modal-audio #focusToggleBtn{flex:0 0 auto !important;}
+  .page-modal-audio #playPageBtn{order:1;}
   .page-modal-audio #stopPlaybackBtn{order:2;}
   .page-modal-audio #wordPracticeBtn{order:3;}
   .page-modal-audio #repeatModeBtn{order:4;}
