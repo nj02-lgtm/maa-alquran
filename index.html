@@ -4229,6 +4229,14 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
        reports a false overflow on lines that actually fit.
        getBoundingClientRect gives sub-pixel widths (offsetWidth rounds per
        word, and those roundings accumulate across a line of Arabic glyphs). */
+    /* A line's real gap between words, in px (0 when 'normal'/unset). */
+    function gapOf(line){
+      var cs = window.getComputedStyle(line);
+      var g = parseFloat(cs.columnGap);
+      if(isNaN(g)){ g = parseFloat(cs.gap); }
+      return isNaN(g) ? 0 : g;
+    }
+
     function fits(){
       for(var i=0;i<lines.length;i++){
         var words = lines[i].querySelectorAll('.mushaf-word');
@@ -4237,6 +4245,11 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
         for(var w=0;w<words.length;w++){
           wordsWidth += words[w].getBoundingClientRect().width;
         }
+        /* Add the line's real column-gap. Pages 1 & 2 (and short centred
+           lines) set a gap between words; ignoring it under-measured the line
+           by (words-1) x gap -- around 50px on page 2 -- so the text overflowed
+           and was clipped even though this check thought it fitted. */
+        wordsWidth += gapOf(lines[i]) * (words.length - 1);
         var avail = lines[i].getBoundingClientRect().width - 8; /* line padding */
         if(wordsWidth > avail + 2.5) return false;
       }
@@ -4269,6 +4282,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       if(!ws.length) continue;
       var total = 0;
       for(var q=0;q<ws.length;q++) total += ws[q].getBoundingClientRect().width;
+      total += gapOf(ln) * (ws.length - 1);   /* count the real word gap too */
       var room = ln.getBoundingClientRect().width - 8;
       if(total > room + 1 && total > 0){
         /* Allow a firm squeeze: showing every word matters more than a
@@ -4328,16 +4342,13 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
 
   document.addEventListener('click', function(ev){
     if(!MOBILE()) return;
-    var body = document.getElementById('pageModalBody');
-    if(!body) return;
-
     if(ev.target.closest && ev.target.closest('.focus-restore-btn')){
-      setFocusMode(false); return;
+      setFocusMode(false);
     }
-    if(!body.contains(ev.target)) return;
-    /* Never hijack a tap meant for a word, ayah marker, or any control. */
-    if(ev.target.closest('.mushaf-word, .ayah-marker, button, select, a, input')) return;
-    toggleFocusMode();
+    /* The page-tap toggle is bound directly to #pageModalBody in
+       ensureFocusRestoreBtn(). It used to be handled here as well, so every
+       tap fired the toggle twice and cancelled itself out -- which is why
+       full-screen mode often looked unresponsive. */
   }, true);
 
   /* Create the restore button once the modal exists. */
