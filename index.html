@@ -4270,6 +4270,21 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   #pageContentModal.focus-mode .page-modal-content{
     height:100% !important;
   }
+  /* Fill the screen vertically in full view. The Mushaf page is sized by its
+     content (15 lines x min-height), so on tall phones it stopped short and
+     left a blank gap between the page frame and the bottom of the screen.
+     Letting the page wrap grow, and the lines share the extra height, spreads
+     the page down to fill the display. */
+  #pageContentModal.focus-mode #pageModalBody{
+    display:flex !important;flex-direction:column !important;
+  }
+  #pageContentModal.focus-mode .mushaf-page-wrap{
+    flex:1 1 auto !important;
+    display:flex !important;flex-direction:column !important;
+  }
+  #pageContentModal.focus-mode .mushaf-page-wrap .mushaf-line{
+    flex:1 1 0 !important;min-height:0 !important;
+  }
   /* ── Tafsir header (phone) ──────────────────────────────────────────────
      Two changes only: pull "التفسير / Translation" up closer to the ruler,
      and put the surah name / ayah number on the same line as it instead of
@@ -4283,6 +4298,7 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .tafsir-panel-ayah{margin-top:0 !important;}
 
   /* Small always-visible control so the buttons are never unreachable. */
+  .focus-restore-btn svg{display:block;pointer-events:none;}
   .focus-restore-btn{
     position:fixed;right:10px;bottom:10px;z-index:1090;
     width:40px;height:40px;border-radius:50%;
@@ -4515,9 +4531,21 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       var b = document.createElement('button');
       b.className = 'focus-restore-btn';
       b.type = 'button';
-      b.setAttribute('aria-label','إظهار الأدوات / Show controls');
-      b.title = 'إظهار الأدوات / Show controls';
-      b.textContent = '⚙';
+      b.setAttribute('aria-label','تصغير الشاشة / Exit full screen');
+      b.title = 'تصغير الشاشة / Exit full screen';
+      /* "Restore down" icon: a large faint frame with a smaller solid frame
+         inside and an arrow pointing inward, showing the screen shrinking back.
+         Drawn as inline SVG so it renders identically on every device -- the
+         Unicode/emoji equivalents are unreliable across Android and iOS. */
+      b.innerHTML = '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" '
+        + 'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" '
+        + 'stroke-linejoin="round" aria-hidden="true" focusable="false">'
+        + '<rect x="2.5" y="2.5" width="19" height="19" rx="2.5" opacity="0.45"/>'
+        + '<rect x="9" y="9" width="12" height="12" rx="1.5"/>'
+        + '<path d="M4.8 4.8 L8.4 8.4"/>'
+        + '<path d="M8.4 8.4 L8.4 5.4"/>'
+        + '<path d="M8.4 8.4 L5.4 8.4"/>'
+        + '</svg>';
       var exitFocus = function(e){
         if(e){ e.preventDefault(); e.stopPropagation(); }
         setFocusMode(false);
