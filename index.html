@@ -4296,7 +4296,11 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   /* Keep the last line clear of the phone's home indicator / browser bar,
      which was clipping the bottom of the final ayah on iPhone. */
   #pageContentModal.focus-mode .mushaf-page-wrap{
-    padding-bottom:calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    /* Base allowance only -- NOT !important, because applyViewportHeight()
+       sets a measured padding inline and an !important here would silently
+       override it (which is exactly why the Chrome-on-iOS fix appeared to do
+       nothing). */
+    padding-bottom:calc(14px + env(safe-area-inset-bottom, 0px));
   }
   /* ── Tafsir header (phone) ──────────────────────────────────────────────
      Two changes only: pull "التفسير / Translation" up closer to the ruler,
@@ -4523,7 +4527,10 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
        Enforce a floor instead of only substituting when it reports ~nothing. */
     if(isIOS && isCriOS) overlay = Math.max(overlay, 58);
     var wrap = c.querySelector('.mushaf-page-wrap');
-    if(wrap) wrap.style.paddingBottom = (14 + Math.round(overlay)) + 'px';
+    if(wrap){
+      wrap.style.setProperty('padding-bottom',
+        (14 + Math.round(overlay)) + 'px', 'important');
+    }
   }
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize', applyViewportHeight);
@@ -4543,7 +4550,8 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       var _box = c.querySelector('.page-modal-box');
       if(_box) _box.style.height = '';
       var _wrap = c.querySelector('.mushaf-page-wrap');
-      if(_wrap) _wrap.style.paddingBottom = '';   // clear the toolbar allowance
+      /* removeProperty, not = '': the value was set with 'important' priority. */
+      if(_wrap) _wrap.style.removeProperty('padding-bottom');
     }
     var body = document.getElementById('pageModalBody');
     if(body){
