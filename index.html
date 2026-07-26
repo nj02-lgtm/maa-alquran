@@ -1883,7 +1883,7 @@ async function getAudioUrl(surah, ayah, folder){
   function addNewStudent(){let n=prompt('أدخل اسم الطالب الجديد / Enter new student name:');if(!n||!n.trim())return;n=n.trim().substring(0,60);if(getStudentList().includes(n)){alert('هذا الاسم موجود بالفعل / This name already exists');return;}localStorage.setItem(STORAGE_PREFIX+n,JSON.stringify(getDefaultData()));currentStudent=n;loadStudentData(n);populateStudentSelect();document.getElementById('studentSelect').value=n;localStorage.setItem('quran_current_student',n);showToast(`تم إضافة "${n}" بنجاح / "${n}" added successfully`);}
   function deleteCurrentStudent(){const s=getStudentList();if(s.length<=1){alert('لا يمكن حذف آخر طالب / Cannot delete the last student');return;}if(!confirm(`حذف "${currentStudent}" نهائياً؟ / Permanently delete "${currentStudent}"?`))return;localStorage.removeItem(STORAGE_PREFIX+currentStudent);const r=getStudentList();currentStudent=r[0];localStorage.setItem('quran_current_student',currentStudent);populateStudentSelect();loadStudentData(currentStudent);showToast('تم حذف الطالب / Student deleted');}
   function switchStudent(n){if(n===currentStudent)return;currentStudent=n;localStorage.setItem('quran_current_student',n);loadStudentData(n);}
-  function showToast(msg,dur=2200){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+  function showToast(msg,dur=2200){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.classList.add('show');/* Clear any previous timer first: repeated toasts used to stack their timeouts, so an older one could fire late and a newer message could appear to hang around. */if(t.__hideTimer)clearTimeout(t.__hideTimer);t.__hideTimer=setTimeout(()=>t.classList.remove('show'),dur);}
 
   /* Tafsir panel helpers */
   function showTafsirPlaceholder(){
@@ -2324,7 +2324,7 @@ window.navigateModal = function(delta) {
     const b=document.getElementById('wordPracticeBtn');if(!b)return;
     if(!b.dataset.wp){b.dataset.wp='1';b.addEventListener('click',()=>{
       wordPracticeMode=!wordPracticeMode;
-      if(wordPracticeMode)showToast('🖍️ اضغط على الكلمات التي تحتاج تدريباً — اضغط عليها مجدداً عند حفظها / Tap words needing practice — tap again once memorized',4000);
+      if(wordPracticeMode)showToast('🖍️ اضغط الكلمات التي تحتاج تدريباً / Tap words needing practice',1800);
       updatePracticeBtn(_wpPage,_wpWrap);
     });}
     const cnt=weakSetFor(page).size;
@@ -4177,6 +4177,10 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
     text-align:center;
   }
   /* Play before Stop (reading order matches the visual left-to-right pair) */
+  /* The toast sits at bottom:24px, which on a phone lands right on top of the
+     Play / Words / Repeat row. Lift it above the control panel while the
+     reading modal is open so it never hides the buttons. */
+  body.reading-open #toast{bottom:auto !important;top:64px !important;}
   .page-modal-audio #stopPlaybackBtn{display:none !important;}
   /* Equal button heights: some labels wrap to two lines ("كلمات / Words",
      "تكبير / Full") while others fit on one ("تشغيل / Play", "تكرار / Repeat"),
