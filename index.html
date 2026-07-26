@@ -2319,7 +2319,7 @@ window.navigateModal = function(delta) {
   function wordIdOf(span,wrap){const vk=span.dataset.verseKey;return vk+'#'+verseWords(wrap,vk).indexOf(span);}
   function applyWeakWordMarks(page,wrap){const s=weakSetFor(page);if(!s.size)return;s.forEach(id=>{const i=id.lastIndexOf('#');const vk=id.slice(0,i),idx=parseInt(id.slice(i+1),10);const el=verseWords(wrap,vk)[idx];if(el)el.classList.add('word-weak');});}
   function pageStatusOf(page){const info=JUZ_PAGE_RANGES.find(r=>page>=r.start&&page<=r.end);if(!info)return 'white';return (memorization[info.juz]&&memorization[info.juz][page])||'white';}
-  function toggleWeakWord(page,span,wrap){const id=wordIdOf(span,wrap);const s=weakSetFor(page);if(s.has(id)){s.delete(id);span.classList.remove('word-weak');showToast('✅ تمت إزالة الكلمة من التدريب / Word unmarked');}else{s.add(id);span.classList.add('word-weak');}setWeakFor(page,s);updatePracticeBtn(page,wrap);try{renderGrid(currentJuz);renderCompactSummary();}catch(e){}}
+  function toggleWeakWord(page,span,wrap){const id=wordIdOf(span,wrap);const s=weakSetFor(page);if(s.has(id)){s.delete(id);span.classList.remove('word-weak');showToast('✅ أُزيلت / Unmarked',1100);}else{s.add(id);span.classList.add('word-weak');}setWeakFor(page,s);updatePracticeBtn(page,wrap);try{renderGrid(currentJuz);renderCompactSummary();}catch(e){}}
   function updatePracticeBtn(page,wrap){
     const b=document.getElementById('wordPracticeBtn');if(!b)return;
     if(!b.dataset.wp){b.dataset.wp='1';b.addEventListener('click',()=>{
@@ -2330,7 +2330,7 @@ window.navigateModal = function(delta) {
     const cnt=weakSetFor(page).size;
     b.style.display='';   // available on every page, whatever its memorization level
     b.classList.toggle('on',wordPracticeMode);
-    b.textContent=wordPracticeMode?('⏹ إيقاف / Stop'+(cnt?` (${cnt})`:'')):('🖍️ كلمات / Words'+(cnt?` (${cnt})`:''));
+    b.textContent=wordPracticeMode?('✓ تم / Done'+(cnt?` (${cnt})`:'')):('🖍️ كلمات / Words'+(cnt?` (${cnt})`:''));
   }
 
   async function renderMushafPage(page){
@@ -4754,7 +4754,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       var refreshPlayLabel = function(){
         if(!MOBILE()) return;
         if(isPlaying()){
-          playBtn.textContent = '⏹ إيقاف / Stop';
+          playBtn.textContent = '⏹ إيقاف التلاوة / Stop';
           playBtn.style.background = '#9b2c2c';
           playBtn.style.color = '#fff';
           playBtn.style.border = '1px solid #7d2323';
