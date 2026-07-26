@@ -4511,26 +4511,23 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       candidates.push(document.documentElement.clientHeight);
     }
     var h = candidates.length ? Math.min.apply(null, candidates) : 0;
-    if(h) box.style.height = Math.round(h) + 'px';
+    if(!h) return;
 
-    /* Chrome on iOS keeps a bottom toolbar that it does NOT subtract from any
-       of the above, so the last line still ends up underneath it. Safari does
-       report it, so only pad when we can see the discrepancy or when we know
-       we're in Chrome-on-iOS. */
+    /* Chrome on iOS keeps a bottom toolbar that it does NOT subtract from ANY
+       height API (visualViewport included), so a box sized to h still runs
+       underneath it. Padding inside the page proved useless -- spread across
+       15 flex lines it moved the last line by only a few px. The decisive fix
+       is to SHORTEN THE BOX ITSELF by the unreported toolbar amount, so its
+       bottom edge physically sits above the bar.
+       Safari reports its toolbar honestly (innerHeight - vv.height), so its
+       unreported amount is ~0 and nothing changes there. */
     var ua = navigator.userAgent || '';
-    var isIOS    = /iP(hone|od|ad)/.test(ua);
-    var isCriOS  = /CriOS/.test(ua);            // Chrome on iOS
-    var overlay  = 0;
-    if(vv && window.innerHeight) overlay = Math.max(0, window.innerHeight - vv.height);
-    /* Chrome-on-iOS reports only a token overlay (a few px) rather than its
-       real bottom toolbar, so taking its number left the last line clipped.
-       Enforce a floor instead of only substituting when it reports ~nothing. */
-    if(isIOS && isCriOS) overlay = Math.max(overlay, 58);
-    var wrap = c.querySelector('.mushaf-page-wrap');
-    if(wrap){
-      wrap.style.setProperty('padding-bottom',
-        (14 + Math.round(overlay)) + 'px', 'important');
-    }
+    var isCriOS = /CriOS/.test(ua) && /iP(hone|od|ad)/.test(ua);
+    var reported = (vv && window.innerHeight)
+      ? Math.max(0, window.innerHeight - vv.height) : 0;
+    var unreported = isCriOS ? Math.max(0, 60 - reported) : 0;
+
+    box.style.height = Math.round(h - unreported) + 'px';
   }
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize', applyViewportHeight);
