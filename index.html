@@ -4373,98 +4373,77 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var lines = wrap.querySelectorAll('.mushaf-line');
     if(!lines.length) return;
 
-    /* One size for the whole page (all lines identical, as in the printed
-       Mushaf). Base is 20px to match the earlier revision, whose text was
-       larger with tighter word gaps; shrinking only happens when a line
-       genuinely overflows, because every 0.5px shaved off the font is space
-       that justify-content:space-between then spreads out as wider gaps. */
-    /* Pages 1 & 2 (Al-Fatihah / start of Al-Baqarah) are printed larger in the
-       Mushaf, but they were starting at 26px with an 18px floor -- when 18px
-       was still too wide the excess was simply clipped by the line's
-       overflow:hidden, cutting words like آلمٓ and أُوْلَٰٓئِكَ off at the edge.
-       A lower floor lets them shrink enough to actually fit. */
     var BASE  = (pg === '1' || pg === '2') ? 23 : 20;
     var FLOOR = (pg === '1' || pg === '2') ? 14 : 15;
+    var i, w;
 
-    var fs = BASE;
-    wrap.style.setProperty('--mushaf-fs', fs + 'px');
-    /* Clear any per-line sizes a previous build may have left behind. */
-    for(var c=0;c<lines.length;c++) lines[c].style.removeProperty('--mushaf-fs');
+    /* Reset any sizing/squeeze left from a previous run. */
+    for(i=0;i<lines.length;i++){
+      lines[i].style.removeProperty('--mushaf-fs');
+      lines[i].style.transform = '';
+      lines[i].style.transformOrigin = '';
+      lines[i].style.overflow = '';
+    }
+    wrap.style.setProperty('--mushaf-fs', BASE + 'px');
 
-    /* Measure the words themselves, not the space-between gaps: space-between
-       distributes leftover room *after* the words are placed, so scrollWidth
-       reports a false overflow on lines that actually fit.
-       getBoundingClientRect gives sub-pixel widths (offsetWidth rounds per
-       word, and those roundings accumulate across a line of Arabic glyphs). */
-    /* A line's real gap between words, in px (0 when 'normal'/unset). */
-    function gapOf(line){
-      var cs = window.getComputedStyle(line);
+    /* PASS 1 -- measure every line once, at BASE.
+       This used to be a shrink loop that stepped down 0.5px at a time and
+       re-measured every word on every step: up to 60 iterations x ~200
+       getBoundingClientRect calls = thousands of forced reflows per run, five
+       runs per page. That was the cause of the general sluggishness on older
+       phones. Glyph widths scale linearly with font-size, so the required size
+       can be computed directly from a single measurement instead. */
+    var info = [];
+    for(i=0;i<lines.length;i++){
+      var ln = lines[i];
+      var words = ln.querySelectorAll('.mushaf-word');
+      if(!words.length){ info.push(null); continue; }
+      var wsum = 0;
+      for(w=0;w<words.length;w++) wsum += words[w].getBoundingClientRect().width;
+      var cs = window.getComputedStyle(ln);
       var g = parseFloat(cs.columnGap);
-      if(isNaN(g)){ g = parseFloat(cs.gap); }
-      return isNaN(g) ? 0 : g;
+      if(isNaN(g)) g = parseFloat(cs.gap);
+      if(isNaN(g)) g = 0;
+      info.push({
+        ln: ln, words: words, wsum: wsum,
+        gaps: g * (words.length - 1),
+        avail: ln.getBoundingClientRect().width - 8   /* line padding */
+      });
     }
 
-    function fits(){
-      for(var i=0;i<lines.length;i++){
-        var words = lines[i].querySelectorAll('.mushaf-word');
-        if(!words.length) continue;
-        var wordsWidth = 0;
-        for(var w=0;w<words.length;w++){
-          wordsWidth += words[w].getBoundingClientRect().width;
-        }
-        /* Add the line's real column-gap. Pages 1 & 2 (and short centred
-           lines) set a gap between words; ignoring it under-measured the line
-           by (words-1) x gap -- around 50px on page 2 -- so the text overflowed
-           and was clipped even though this check thought it fitted. */
-        wordsWidth += gapOf(lines[i]) * (words.length - 1);
-        var avail = lines[i].getBoundingClientRect().width - 8; /* line padding */
-        if(wordsWidth > avail + 2.5) return false;
-      }
-      return true;
+    /* Largest size where every line fits: word widths scale with font-size,
+       the inter-word gaps are fixed pixels. */
+    var best = BASE;
+    for(i=0;i<info.length;i++){
+      var d = info[i];
+      if(!d || d.wsum <= 0) continue;
+      var allowed = BASE * (d.avail - d.gaps + 2.5) / d.wsum;
+      if(allowed < best) best = allowed;
     }
+    var fs = Math.max(FLOOR, Math.min(BASE, Math.floor(best * 2) / 2));  /* 0.5px steps */
+    wrap.style.setProperty('--mushaf-fs', fs + 'px');
 
-    var guard = 0;
-    while(!fits() && fs > FLOOR && guard < 60){
-      fs -= 0.5;
-      wrap.style.setProperty('--mushaf-fs', fs + 'px');
-      guard++;
-    }
-
-    /* Last-resort safety net: if a line STILL overflows once the font hits its
-       floor, the line's overflow:hidden would silently clip words off the left
-       edge -- losing Qur'an text, which must never happen. Squeeze just that
-       line horizontally so every word stays visible.
-
-       Critically, overflow must be switched to visible on any line we scale:
-       CSS clips an element's content in its own coordinate system BEFORE the
-       transform is applied, so scaling a clipped line just shrinks the
-       already-truncated result and the missing words never reappear. With the
-       clip off, the scaled content lands exactly inside the line's width. */
-    for(var s=0;s<lines.length;s++){
-      var ln = lines[s];
-      ln.style.transform = '';
-      ln.style.transformOrigin = '';
-      ln.style.overflow = '';
-      var ws = ln.querySelectorAll('.mushaf-word');
-      if(!ws.length) continue;
+    /* PASS 2 -- safety net. If a line still overflows at the floor, squeeze it
+       horizontally rather than let overflow:hidden clip words off the edge.
+       overflow must go visible: CSS clips content BEFORE transforms apply, so
+       scaling a clipped line would just shrink the truncated result. */
+    for(i=0;i<info.length;i++){
+      var d2 = info[i];
+      if(!d2) continue;
       var total = 0;
-      for(var q=0;q<ws.length;q++) total += ws[q].getBoundingClientRect().width;
-      total += gapOf(ln) * (ws.length - 1);   /* count the real word gap too */
-      var room = ln.getBoundingClientRect().width - 8;
+      for(w=0;w<d2.words.length;w++) total += d2.words[w].getBoundingClientRect().width;
+      total += d2.gaps;
+      var room = d2.ln.getBoundingClientRect().width - 8;
       if(total > room + 1 && total > 0){
-        /* Allow a firm squeeze: showing every word matters more than a
-           slightly narrower glyph on the rare over-full line. */
         var scale = Math.max(0.6, room / total);
-        ln.style.overflow = 'visible';
-        ln.style.transformOrigin = 'right center';  /* RTL: anchor at right */
-        ln.style.transform = 'scaleX(' + scale.toFixed(4) + ')';
+        d2.ln.style.overflow = 'visible';
+        d2.ln.style.transformOrigin = 'right center';   /* RTL: anchor right */
+        d2.ln.style.transform = 'scaleX(' + scale.toFixed(4) + ')';
       }
     }
 
-    /* The ayah highlight strips are sized from word offsets captured when the
-       ayah was selected -- i.e. before this fit changed the font size. Left
-       stale they stay at their old, larger dimensions, which overflow:hidden
-       used to conceal. Redraw them so they track the final text size. */
+    /* Highlight strips are sized from word offsets captured before this fit
+       changed the font size, so redraw them to match. */
     try{
       if(typeof window.drawAyahHighlight === 'function') window.drawAyahHighlight(wrap);
       if(typeof window.drawAyahHover === 'function') window.drawAyahHover(wrap);
@@ -4483,7 +4462,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
      load (and a few times after render) lets the page recover automatically. */
   function fitMushafSettled(){
     fitMushaf();
-    [150, 600, 1500, 3000].forEach(function(ms){ setTimeout(fitMushaf, ms); });
+    [200, 900].forEach(function(ms){ setTimeout(fitMushaf, ms); });   /* fewer repeats: the fit is now cheap but still not free */
   }
 
   /* ── Focus mode ──────────────────────────────────────────────────────────
@@ -4786,11 +4765,11 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
         });
       }
       refreshPlayLabel();
-      setInterval(refreshPlayLabel, 1000);
+      setInterval(refreshPlayLabel, 3000);   /* audio events do the real work */
     }
   }
   document.addEventListener('click', function(){ setTimeout(ensureFocusRestoreBtn, 50); }, true);
-  setInterval(ensureFocusRestoreBtn, 1200);
+  setInterval(ensureFocusRestoreBtn, 4000);   /* was 1200ms: needless DOM polling */
   document.addEventListener('DOMContentLoaded', ensureFocusRestoreBtn);
   setTimeout(ensureFocusRestoreBtn, 400);
   window.fitMushafSettled = fitMushafSettled;
