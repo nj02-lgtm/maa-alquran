@@ -4285,6 +4285,11 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   #pageContentModal.focus-mode .mushaf-page-wrap .mushaf-line{
     flex:1 1 0 !important;min-height:0 !important;
   }
+  /* Keep the last line clear of the phone's home indicator / browser bar,
+     which was clipping the bottom of the final ayah on iPhone. */
+  #pageContentModal.focus-mode .mushaf-page-wrap{
+    padding-bottom:calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+  }
   /* ── Tafsir header (phone) ──────────────────────────────────────────────
      Two changes only: pull "التفسير / Translation" up closer to the ruler,
      and put the surah name / ayah number on the same line as it instead of
@@ -4299,6 +4304,10 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
 
   /* Small always-visible control so the buttons are never unreachable. */
   .focus-restore-btn svg{display:block;pointer-events:none;}
+  /* Slightly see-through when idle so it obscures as little text as possible;
+     it can also be dragged anywhere on screen (see ensureFocusRestoreBtn). */
+  .focus-restore-btn{opacity:.62;transition:opacity .15s;}
+  .focus-restore-btn:active{opacity:1;}
   .focus-restore-btn{
     position:fixed;right:10px;bottom:10px;z-index:1090;
     width:40px;height:40px;border-radius:50%;
@@ -4550,12 +4559,89 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
         if(e){ e.preventDefault(); e.stopPropagation(); }
         setFocusMode(false);
       };
-      /* touchend fires immediately on iOS; click can be delayed or dropped when
-         it lands on a fixed overlay above a position:fixed body, which is why
-         the gear needed several taps on iPhone. Handle both, de-duplicated. */
-      b.addEventListener('touchend', function(e){ exitFocus(e); }, {passive:false});
-      b.addEventListener('click', function(e){ exitFocus(e); });
+
+      /* ── Draggable exit button ──────────────────────────────────────────
+         The button floats over the page, so wherever it sits it can cover a
+         little of the text. Making it draggable lets the reader move it off
+         whatever they're reading. A short press is still a tap (exit full
+         view); only a real movement counts as a drag, so the two never
+         conflict. The chosen position is remembered between sessions. */
+      var POSKEY = 'maa_focus_btn_pos';
+      var startX = 0, startY = 0, offX = 0, offY = 0, dragging = false, moved = false;
+
+      function placeAt(x, y){
+        var maxX = window.innerWidth  - b.offsetWidth  - 4;
+        var maxY = window.innerHeight - b.offsetHeight - 4;
+        x = Math.max(4, Math.min(maxX, x));
+        y = Math.max(4, Math.min(maxY, y));
+        b.style.left = x + 'px';
+        b.style.top  = y + 'px';
+        b.style.right = 'auto';
+        b.style.bottom = 'auto';
+      }
+      function savePos(){
+        try{
+          var r = b.getBoundingClientRect();
+          localStorage.setItem(POSKEY, JSON.stringify({x:r.left, y:r.top}));
+        }catch(e){}
+      }
+      function restorePos(){
+        try{
+          var p = JSON.parse(localStorage.getItem(POSKEY) || 'null');
+          if(p && typeof p.x === 'number') placeAt(p.x, p.y);
+        }catch(e){}
+      }
+
+      b.addEventListener('touchstart', function(e){
+        var t = e.touches[0];
+        var r = b.getBoundingClientRect();
+        startX = t.clientX; startY = t.clientY;
+        offX = t.clientX - r.left; offY = t.clientY - r.top;
+        dragging = true; moved = false;
+        b.style.opacity = '1';
+      }, {passive:true});
+
+      b.addEventListener('touchmove', function(e){
+        if(!dragging) return;
+        var t = e.touches[0];
+        if(Math.abs(t.clientX - startX) > 6 || Math.abs(t.clientY - startY) > 6) moved = true;
+        if(moved){
+          e.preventDefault();                       // don't scroll the page
+          placeAt(t.clientX - offX, t.clientY - offY);
+        }
+      }, {passive:false});
+
+      b.addEventListener('touchend', function(e){
+        dragging = false;
+        if(moved){ savePos(); e.preventDefault(); e.stopPropagation(); return; }
+        exitFocus(e);                                // a tap, not a drag
+      }, {passive:false});
+
+      /* Mouse equivalent for desktop. */
+      b.addEventListener('mousedown', function(e){
+        var r = b.getBoundingClientRect();
+        startX = e.clientX; startY = e.clientY;
+        offX = e.clientX - r.left; offY = e.clientY - r.top;
+        dragging = true; moved = false;
+        e.preventDefault();
+      });
+      document.addEventListener('mousemove', function(e){
+        if(!dragging) return;
+        if(Math.abs(e.clientX - startX) > 6 || Math.abs(e.clientY - startY) > 6) moved = true;
+        if(moved) placeAt(e.clientX - offX, e.clientY - offY);
+      });
+      document.addEventListener('mouseup', function(){
+        if(dragging && moved) savePos();
+        dragging = false;
+      });
+
+      b.addEventListener('click', function(e){
+        if(moved){ moved = false; e.preventDefault(); e.stopPropagation(); return; }
+        exitFocus(e);
+      });
+
       c.appendChild(b);
+      restorePos();
     }
 
     /* Bind the full-view button that sits in the controls row next to Play.
