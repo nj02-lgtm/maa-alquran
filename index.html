@@ -4528,6 +4528,28 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var unreported = isCriOS ? Math.max(0, 60 - reported) : 0;
 
     box.style.height = Math.round(h - unreported) + 'px';
+
+    /* TEMPORARY diagnostic (remove after debugging): shows the numbers this
+       function is working with, on-screen, so we can see what Chrome iOS
+       actually reports instead of guessing. */
+    try{
+      var dbg = document.getElementById('vvDebug');
+      if(!dbg){
+        dbg = document.createElement('div');
+        dbg.id = 'vvDebug';
+        dbg.style.cssText = 'position:fixed;top:64px;left:8px;z-index:99999;'
+          + 'background:rgba(0,0,0,.75);color:#0f0;font:11px monospace;'
+          + 'padding:4px 6px;border-radius:4px;pointer-events:none;direction:ltr;';
+        document.body.appendChild(dbg);
+      }
+      dbg.textContent = 'vv:' + (vv ? Math.round(vv.height) : 'n/a')
+        + ' inner:' + window.innerHeight
+        + ' client:' + document.documentElement.clientHeight
+        + ' h:' + Math.round(h)
+        + ' unrep:' + unreported
+        + ' box:' + Math.round(h - unreported)
+        + (isCriOS ? ' CriOS' : ' notCriOS');
+    }catch(e){}
   }
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize', applyViewportHeight);
