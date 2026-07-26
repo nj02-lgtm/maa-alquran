@@ -4497,8 +4497,30 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var box = c.querySelector('.page-modal-box');
     if(!box) return;
     var vv = window.visualViewport;
-    var h = vv ? vv.height : window.innerHeight;
+
+    /* Use the smallest height any API reports as visible -- different iOS
+       browsers disagree about whether their toolbars overlay the page. */
+    var candidates = [];
+    if(vv && vv.height) candidates.push(vv.height);
+    if(window.innerHeight) candidates.push(window.innerHeight);
+    if(document.documentElement && document.documentElement.clientHeight){
+      candidates.push(document.documentElement.clientHeight);
+    }
+    var h = candidates.length ? Math.min.apply(null, candidates) : 0;
     if(h) box.style.height = Math.round(h) + 'px';
+
+    /* Chrome on iOS keeps a bottom toolbar that it does NOT subtract from any
+       of the above, so the last line still ends up underneath it. Safari does
+       report it, so only pad when we can see the discrepancy or when we know
+       we're in Chrome-on-iOS. */
+    var ua = navigator.userAgent || '';
+    var isIOS    = /iP(hone|od|ad)/.test(ua);
+    var isCriOS  = /CriOS/.test(ua);            // Chrome on iOS
+    var overlay  = 0;
+    if(vv && window.innerHeight) overlay = Math.max(0, window.innerHeight - vv.height);
+    if(isIOS && isCriOS && overlay < 8) overlay = 52;   // measured Chrome iOS bar
+    var wrap = c.querySelector('.mushaf-page-wrap');
+    if(wrap) wrap.style.paddingBottom = (14 + Math.round(overlay)) + 'px';
   }
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize', applyViewportHeight);
@@ -4517,6 +4539,8 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     } else {
       var _box = c.querySelector('.page-modal-box');
       if(_box) _box.style.height = '';
+      var _wrap = c.querySelector('.mushaf-page-wrap');
+      if(_wrap) _wrap.style.paddingBottom = '';   // clear the toolbar allowance
     }
     var body = document.getElementById('pageModalBody');
     if(body){
