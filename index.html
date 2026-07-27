@@ -4950,9 +4950,10 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   /* Reduced side padding so the Strong badge sits closer to the card edge,
      giving the counts more usable width. */
   .card-mem{padding:8px 3px !important;}
-  /* The stats row was centred, which also held the badges away from the edges;
-     spreading it edge-to-edge puts that space between the numbers instead. */
-  .cards-row .mem-stats{justify-content:space-between !important;padding:0 !important;}
+  /* Light and its count stay in their original position: the stats row keeps
+     its centred layout. (space-between was tried and pushed Light out to the
+     far edge, which was not wanted.) */
+  .cards-row .mem-stats{justify-content:center !important;padding:0 !important;}
   /* Slimmer badges so 3-digit Strong/Light counts have clear space. */
   .green-badge,.yellow-badge{font-size:9px !important;padding:2px 5px !important;}
 
