@@ -3982,7 +3982,7 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
 
   .card-label{font-size:10px;}
   .card-label-en{font-size:9px;}
-  .card-value{font-size:16px;}
+  .card-value{font-size:18px;}
   .cards-row .mem-stats{gap:4px;flex-wrap:nowrap;justify-content:center;margin-top:2px;min-width:0;}
   .cards-row .mem-stat-item{font-size:10px;gap:2px;min-width:0;white-space:nowrap;}
   .green-badge,.yellow-badge{font-size:9px;padding:2px 4px;white-space:nowrap;}
@@ -4053,13 +4053,13 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   /* Memorized-Juz grid: 5 columns x 6 rows = 30 juz, square boxes, roomier */
   .summary-grid{grid-template-columns:repeat(5,1fr) !important;gap:6px;}
   .summary-card{padding:7px 2px !important;min-height:72px;gap:2px;border-radius:10px;justify-content:center;overflow:hidden;}
-  .summary-card .sc-num{font-size:18px !important;margin-bottom:2px !important;}
+  .summary-card .sc-num{font-size:22px !important;margin-bottom:2px !important;}
 
   /* ── 8. Juz page grid: 4 compact boxes per line ── */
   .page-grid{grid-template-columns:repeat(4,1fr) !important;gap:5px !important;}
   .page-cell{padding:27px 3px 3px !important;min-height:0 !important;gap:1px;border-radius:7px;}
-  .page-number{font-size:18px !important;margin-top:0;}
-  .surah-name{font-size:11px;line-height:1.15;}
+  .page-number{font-size:22px !important;margin-top:0;}
+  .surah-name{font-size:12px;line-height:1.15;}
   .page-cell .surah-name span[lang="en"]{font-size:10px !important;}
   .surah-name-extra{font-size:9px;margin-top:1px;padding-top:1px;}
   .open-page-icon{width:28px;height:26px;top:0;left:0;font-size:11px;background-size:20px 18px;background-position:4px 4px;}
@@ -4919,6 +4919,11 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
 /* ===== Mobile UX pass (phones ≤700px) — desktop layout unchanged ===== */
 .mob-jump-row{display:none;}
 @media (max-width:700px){
+  /* 0. Portrait text sizes (requested): panel titles and the Read or Listen
+     labels, which are otherwise set at 14px and inline 11px respectively. */
+  .panel-title{font-size:15px !important;}
+  #readListenCard span{font-size:12px !important;}
+
   /* 1. Juz selector on top, Juz Pages below (visual reorder only; DOM unchanged) */
   .layout-row > .panel:nth-child(1){order:2;}
   .layout-row > .panel:nth-child(2){order:1;}
