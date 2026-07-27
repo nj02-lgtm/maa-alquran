@@ -1198,13 +1198,13 @@ body.dark .tafsir-selector-row label {
           <!-- Ayah (optional) -->
           <div style="display:flex;align-items:center;gap:5px;">
             <span style="font-size:11px;font-weight:700;opacity:.7;line-height:1.1;text-align:center;">الآية<br><span style="font-size:9px;opacity:.85;">Ayah</span></span>
-            <input id="qnAyah" type="number" min="1" placeholder="—" title="أدخل رقم آية / Enter an ayah" style="width:50px;background:#fef9ef;border:1px solid #cfc5a5;border-radius:40px;padding:5px 6px;font-size:12px;text-align:center;color:#1f4f7b;">
+            <input id="qnAyah" type="number" min="1" placeholder="1-286" title="أدخل رقم آية / Enter an ayah" style="width:50px;background:#fef9ef;border:1px solid #cfc5a5;border-radius:40px;padding:5px 6px;font-size:12px;text-align:center;color:#1f4f7b;">
           </div>
 
           <!-- Page (typed) -->
           <div style="display:flex;align-items:center;gap:5px;">
             <span style="font-size:11px;font-weight:700;opacity:.7;line-height:1.1;text-align:center;">الصفحة<br><span style="font-size:9px;opacity:.85;">Page</span></span>
-            <input id="qnPageInput" type="number" min="1" max="604" placeholder="—" title="أو اكتب رقم صفحة / Or type a page" style="width:54px;background:#fef9ef;border:1px solid #cfc5a5;border-radius:40px;padding:5px 6px;font-size:12px;text-align:center;color:#1f4f7b;font-weight:700;">
+            <input id="qnPageInput" type="number" min="1" max="604" placeholder="1-604" title="أو اكتب رقم صفحة / Or type a page" style="width:54px;background:#fef9ef;border:1px solid #cfc5a5;border-radius:40px;padding:5px 6px;font-size:12px;text-align:center;color:#1f4f7b;font-weight:700;">
           </div>
         </div>
       </div>
@@ -4949,7 +4949,11 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
      Their inline width is 50px, which at 12px centred with 6px padding and a
      border leaves no room for a third digit. Also strip the number spinner,
      which steals ~15px of the usable width in WebKit. */
-  #qnAyah,#qnPageInput{width:66px !important;padding:5px 4px !important;text-align:center !important;}
+  #qnAyah,#qnPageInput{width:78px !important;padding:5px 4px !important;text-align:center !important;}
+  /* Range hint in grey. The input's own colour is dark blue, and some
+     browsers fade the placeholder further, so it is set explicitly. */
+  #qnAyah::placeholder,#qnPageInput::placeholder{color:#9b9b9b !important;opacity:1 !important;font-size:11px !important;}
+  #qnAyah::-webkit-input-placeholder,#qnPageInput::-webkit-input-placeholder{color:#9b9b9b !important;opacity:1 !important;font-size:11px !important;}
   #qnAyah::-webkit-outer-spin-button,#qnAyah::-webkit-inner-spin-button,
   #qnPageInput::-webkit-outer-spin-button,#qnPageInput::-webkit-inner-spin-button{
     -webkit-appearance:none !important;margin:0 !important;}
@@ -4970,15 +4974,19 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
      the wrappers would become grid items themselves and the layout would break;
      unsupported browsers simply keep the existing single-row layout. */
   @supports (display:contents){
-    #readListenCard{display:grid !important;grid-template-columns:1fr auto !important;
-      align-items:center !important;gap:6px 10px !important;}
+    #readListenCard{display:grid !important;grid-template-columns:auto auto 1fr !important;
+      align-items:center !important;gap:6px 8px !important;}
     #readListenCard > div{display:contents !important;}
+    /* Row 1: title spans the full width. */
     #readListenCard > div:nth-child(1) > div{grid-column:1 / -1 !important;grid-row:1 !important;
       text-align:center !important;}
-    #readListenCard > div:nth-child(2) > div:nth-child(1){grid-column:1 !important;grid-row:2 !important;}
-    #readListenCard > div:nth-child(2) > div:nth-child(2){grid-column:2 !important;grid-row:2 !important;}
+    /* Row 2: Surah takes columns 1-2, Ayah takes column 3. */
+    #readListenCard > div:nth-child(2) > div:nth-child(1){grid-column:1 / 3 !important;grid-row:2 !important;}
+    #readListenCard > div:nth-child(2) > div:nth-child(2){grid-column:3 !important;grid-row:2 !important;}
+    /* Row 3: Page takes column 1 only, Go stretches across columns 2-3
+       -- so it starts right after the Page box and extends to the right edge. */
     #readListenCard > div:nth-child(2) > div:nth-child(3){grid-column:1 !important;grid-row:3 !important;}
-    #qnGoBtn{grid-column:2 !important;grid-row:3 !important;justify-self:stretch !important;}
+    #qnGoBtn{grid-column:2 / -1 !important;grid-row:3 !important;justify-self:stretch !important;}
   }
 
   /* 1. Juz selector on top, Juz Pages below (visual reorder only; DOM unchanged) */
