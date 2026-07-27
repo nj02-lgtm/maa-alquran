@@ -5023,7 +5023,14 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   #readListenCard span span{font-size:3.1vw !important;}
 
   /* Row 2: the actual dropdown and inputs */
-  #qnSurah{width:47.5vw !important;flex:0 0 auto !important;font-size:3.5vw !important;padding:1.4vw 1.6vw !important;}
+  /* Size the dropdown to its own widest option rather than a guessed width.
+     A <select> with width:auto measures every option and takes the widest --
+     the longest here is "60. الممتحنة / Al-Mumtahinah" (28 chars) -- so this
+     is exact whatever the font renders at. The ~5px side padding gives the
+     roughly 10px of breathing room over the text itself. max-width is only a
+     safety net so it can never overflow the row. */
+  #qnSurah{width:auto !important;flex:0 0 auto !important;max-width:62vw !important;
+    font-size:3.5vw !important;padding:1.4vw 0.7vw !important;}
   #qnAyah,#qnPageInput{width:10vw !important;font-size:3.5vw !important;padding:1.4vw 0.6vw !important;}
 
   /* Keep the three controls on ONE line, packed together in the centre --
