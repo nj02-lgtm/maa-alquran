@@ -4945,8 +4945,20 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   #readListenCard > div:first-child > div{font-size:12px !important;font-weight:700 !important;
     opacity:.95 !important;white-space:nowrap !important;}
   #qnGoBtn{white-space:nowrap !important;flex:0 0 auto !important;}
-  /* Surah dropdown 1.2x wider than its inline 150px. */
-  #qnSurah{width:180px !important;max-width:100% !important;}
+  /* Ayah and Page boxes wide enough for 3 digits (max ayah 286, max page 604).
+     Their inline width is 50px, which at 12px centred with 6px padding and a
+     border leaves no room for a third digit. Also strip the number spinner,
+     which steals ~15px of the usable width in WebKit. */
+  #qnAyah,#qnPageInput{width:66px !important;padding:5px 4px !important;text-align:center !important;}
+  #qnAyah::-webkit-outer-spin-button,#qnAyah::-webkit-inner-spin-button,
+  #qnPageInput::-webkit-outer-spin-button,#qnPageInput::-webkit-inner-spin-button{
+    -webkit-appearance:none !important;margin:0 !important;}
+  #qnAyah,#qnPageInput{-moz-appearance:textfield !important;}
+
+  /* The Surah dropdown now flexes into whatever width is left rather than
+     being pinned, so widening the Ayah box takes room from it automatically. */
+  #readListenCard > div:nth-child(2) > div{min-width:0 !important;}
+  #qnSurah{flex:1 1 auto !important;width:auto !important;min-width:0 !important;max-width:100% !important;}
 
   /* Portrait arrangement of the Read or Listen card:
         line 1:  📖 اقرأ أو استمع / Read or Listen
