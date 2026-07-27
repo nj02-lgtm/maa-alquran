@@ -4996,7 +4996,16 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
 /* Mobile flow: after picking a juz -> collapse the selector band & reveal pages;
    plus a "first unmemorized" quick jump. Phones only; desktop untouched. */
 (function(){
-  function mobile(){return window.innerWidth<=700;}
+  function mobile(){
+    /* 820, not 700: some phones (e.g. Galaxy A21S) report a CSS viewport of
+       ~720px rather than the usual ~360px, so a 700px cut-off treated them as
+       desktop and skipped this flow entirely -- the pages never scrolled into
+       view after picking a Juz. pointer:coarse also catches touch devices that
+       report an even wider viewport. */
+    if(window.innerWidth<=820) return true;
+    try{ return window.matchMedia('(pointer:coarse)').matches && window.innerWidth<=1100; }
+    catch(e){ return false; }
+  }
   function pagesPanel(){return document.querySelectorAll('.layout-row .panel')[0]||null;}
   function memoPanel(){return document.querySelector('.panel.mobile-collapsible')
                         ||document.querySelectorAll('.layout-row .panel')[1]||null;}
