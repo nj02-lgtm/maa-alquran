@@ -1160,8 +1160,8 @@ body.dark .tafsir-selector-row label {
         <label>👤 الطالب / Student:</label>
         <select id="studentSelect"></select>
         <div class="student-btns">
-          <button class="add-student-btn" id="addStudentBtn">➕ إضافة طالب</button>
-          <button class="delete-student-btn" id="deleteStudentBtn">🗑 حذف طالب</button>
+          <button class="add-student-btn" id="addStudentBtn"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-inline-end:4px;"><path d="M4 14h4l1.5 2.5h5L16 14h4"/><path d="M4 14 6.5 5.5h11L20 14v4.5H4z"/></svg>إضافة طالب / Add</button>
+          <button class="delete-student-btn" id="deleteStudentBtn">🗑 حذف طالب / Remove</button>
         </div>
       </div>
     </div>
@@ -4922,7 +4922,9 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   /* 0. Portrait text sizes (requested): panel titles and the Read or Listen
      labels, which are otherwise set at 14px and inline 11px respectively. */
   .panel-title{font-size:15px !important;}
-  #readListenCard span{font-size:12px !important;}
+  /* Task 2: the السورة / الآية / الصفحة titles (and their English lines) in
+     black. They were inline-styled with opacity .7/.85, which greyed them. */
+  #readListenCard span{font-size:12px !important;color:#000 !important;opacity:1 !important;}
 
   /* "الصفحات المحفوظة / Memorized Pages" and "الصفحات المتبقية / Remaining
      Pages" -- larger and bold. The Arabic line and the English line under it
@@ -4932,18 +4934,37 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
      text is a few percent wider than regular, which is what pushed
      "Remaining Pages" and "الصفحات المتبقية" onto a second line. nowrap
      guarantees a single line; the sizes are still above the original 10/9px. */
-  .card-label{font-size:11px !important;font-weight:700 !important;opacity:.95 !important;
+  /* Task 4/5: Remaining Pages and Memorized Pages headings, 2px larger and
+     matched. The row is widened below so the longer labels cannot wrap. */
+  .card-label{font-size:13px !important;font-weight:700 !important;opacity:.95 !important;
     white-space:nowrap !important;}
-  .card-label-en{font-size:9.5px !important;font-weight:700 !important;opacity:.85 !important;
+  .card-label-en{font-size:11.5px !important;font-weight:700 !important;opacity:.85 !important;
     white-space:nowrap !important;}
+  /* Give the Remaining card more of the row so "الصفحات المتبقية" fits on one
+     line at the larger size (was 1.7fr / 1fr). */
+  .cards-row{grid-template-columns:1.15fr 1fr !important;}
+  #remainingCard{width:auto !important;min-width:0 !important;padding:8px 10px !important;}
+  /* Task 5: Memorized Pages matched to Remaining Pages. Both already share the
+     .card-label / .card-label-en classes above, so the headings are identical;
+     this matches the card padding and the big number too. */
+  .card-mem{padding:8px 10px !important;}
+
+  /* Task 6: "👤 الطالب / Student:" sized to match the height of the student
+     dropdown beside it. The dropdown is 11px text with 6px/12px padding, so a
+     15px label lines up with its overall height. The dropdown may shrink to
+     make room -- min-width:0 lets it -- which is the intended trade. */
+  .student-area label{font-size:15px !important;font-weight:700 !important;
+    white-space:nowrap !important;flex:0 0 auto !important;}
+  #studentSelect{font-size:12px !important;flex:1 1 auto !important;min-width:0 !important;}
+  .card-mem .card-value,#remainingCard .card-value{font-size:18px !important;font-weight:700 !important;}
 
   /* "📖 اقرأ أو استمع / Read or Listen" is a single element holding both the
      Arabic and the English, so one size covers both. Set slightly above the
      card headings (11px) and bold, and kept on one line with the Go button --
      nowrap on all three so the row can never break. */
   #readListenCard > div:first-child{flex-wrap:nowrap !important;gap:8px !important;}
-  #readListenCard > div:first-child > div{font-size:12px !important;font-weight:700 !important;
-    opacity:.95 !important;white-space:nowrap !important;}
+  #readListenCard > div:first-child > div{font-size:14px !important;font-weight:700 !important;
+    opacity:1 !important;white-space:nowrap !important;}
   #qnGoBtn{white-space:nowrap !important;flex:0 0 auto !important;}
   /* Ayah and Page boxes wide enough for 3 digits (max ayah 286, max page 604).
      Their inline width is 50px, which at 12px centred with 6px padding and a
@@ -5158,6 +5179,11 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
    replace this badge anyway. */
 @media (pointer:coarse){
   .summary-card .sc-zero{display:none !important;}
+  /* Task 3: hide the "Select Juz / Level / Apply to all" row on mobile.
+     pointer:coarse targets touch devices in both orientations, so it also
+     covers landscape (800px) which sits outside the <=700px band. Desktop,
+     which uses a mouse, keeps the row. */
+  .juz-selector-area{display:none !important;}
 }
 
 @keyframes mobFlash{
