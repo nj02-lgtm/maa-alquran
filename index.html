@@ -5007,16 +5007,28 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   #remainingCard{width:auto !important;min-width:24vw !important;padding:1.6vw 2.8vw !important;}
   #remainingCard .card-label,#remainingCard .card-label-en{white-space:nowrap !important;}
 
-  /* Read or Listen: title, button, labels and inputs are all inline-styled,
-     so they are targeted here explicitly (!important beats inline styles). */
-  #readListenCard div[style*="font-size:12px"]{font-size:3.2vw !important;}
-  #qnGoBtn{font-size:3vw !important;padding:1.2vw 3.4vw !important;}
-  #readListenCard span[style*="font-size:11px"]{font-size:3vw !important;}
-  #readListenCard span[style*="font-size:9px"]{font-size:2.5vw !important;}
-  #qnSurah{width:40vw !important;font-size:3vw !important;padding:1.2vw 2vw !important;}
-  #qnAyah,#qnPageInput{width:14vw !important;font-size:3vw !important;padding:1.2vw 1vw !important;}
-  /* Let the controls row wrap now that its contents are larger. */
-  #readListenCard div[style*="nowrap"]{flex-wrap:wrap !important;gap:2vw !important;}
+  /* ── Read or Listen ──────────────────────────────────────────────────────
+     Everything in this card is styled inline in the HTML. Matching on the
+     style attribute ([style*="font-size:11px"]) proved unreliable because
+     browsers may re-serialise that string (e.g. "font-size: 11px" with a
+     space), so the selectors silently missed. These structural selectors
+     cannot break that way. !important still beats the inline values. */
+
+  /* Row 1: title + Go button */
+  #readListenCard > div:first-child > div{font-size:3.8vw !important;}
+  #qnGoBtn{font-size:3.4vw !important;padding:1.4vw 4vw !important;}
+
+  /* Row 2: the السورة / الآية / الصفحة labels (Arabic on top, English under) */
+  #readListenCard span{font-size:3.8vw !important;line-height:1.2 !important;}
+  #readListenCard span span{font-size:3.1vw !important;}
+
+  /* Row 2: the actual dropdown and inputs */
+  #qnSurah{width:42vw !important;font-size:3.5vw !important;padding:1.4vw 2.2vw !important;}
+  #qnAyah,#qnPageInput{width:15vw !important;font-size:3.5vw !important;padding:1.4vw 1vw !important;}
+
+  /* Allow the controls row to wrap, and give the groups breathing room. */
+  #readListenCard > div:nth-child(2){flex-wrap:wrap !important;gap:2.4vw !important;}
+  #readListenCard > div:nth-child(2) > div{gap:1.4vw !important;}
 
   /* Juz selector row: Select Juz / Level / Apply to all */
   .selector-label{font-size:3vw !important;}
