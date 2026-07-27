@@ -3983,8 +3983,8 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .card-label{font-size:10px;}
   .card-label-en{font-size:9px;}
   .card-value{font-size:18px;}
-  .cards-row .mem-stats{gap:14px;flex-wrap:nowrap;justify-content:center;margin-top:2px;min-width:0;}
-  .cards-row .mem-stat-item{font-size:10px;gap:5px;min-width:0;white-space:nowrap;}
+  .cards-row .mem-stats{gap:10px;flex-wrap:nowrap;justify-content:center;margin-top:2px;min-width:0;}
+  .cards-row .mem-stat-item{font-size:10px;gap:4px;min-width:0;white-space:nowrap;}
   .green-badge,.yellow-badge{font-size:9px;padding:2px 4px;white-space:nowrap;}
 
   /* ── 5. Read / Listen: Go | Surah | Ayah | Page all on ONE line ── */
@@ -4936,18 +4936,20 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
      guarantees a single line; the sizes are still above the original 10/9px. */
   /* Task 4/5: Remaining Pages and Memorized Pages headings, 2px larger and
      matched. The row is widened below so the longer labels cannot wrap. */
-  .card-label{font-size:13px !important;font-weight:700 !important;opacity:.95 !important;
+  .card-label{font-size:12px !important;font-weight:700 !important;opacity:.95 !important;
     white-space:nowrap !important;}
-  .card-label-en{font-size:11.5px !important;font-weight:700 !important;opacity:.85 !important;
+  .card-label-en{font-size:10.5px !important;font-weight:700 !important;opacity:.85 !important;
     white-space:nowrap !important;}
   /* Give the Remaining card more of the row so "الصفحات المتبقية" fits on one
      line at the larger size (was 1.7fr / 1fr). */
-  .cards-row{grid-template-columns:1.15fr 1fr !important;}
+  .cards-row{grid-template-columns:1.75fr 1fr !important;}
   #remainingCard{width:auto !important;min-width:0 !important;padding:8px 10px !important;}
   /* Task 5: Memorized Pages matched to Remaining Pages. Both already share the
      .card-label / .card-label-en classes above, so the headings are identical;
      this matches the card padding and the big number too. */
   .card-mem{padding:8px 10px !important;}
+  /* Slimmer badges so 3-digit Strong/Light counts have clear space. */
+  .green-badge,.yellow-badge{font-size:9px !important;padding:2px 5px !important;}
 
   /* Task 6: "👤 الطالب / Student:" sized to match the height of the student
      dropdown beside it. The dropdown is 11px text with 6px/12px padding, so a
