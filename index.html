@@ -1174,13 +1174,13 @@ body.dark .tafsir-selector-row label {
           <div class="mem-stat-item"><span class="yellow-badge">خفيف / Light</span> <span id="lightCount">0</span></div>
         </div>
       </div>
-      <div class="card" style="width:110px;">
+      <div class="card" id="remainingCard" style="width:110px;">
         <div class="card-label">الصفحات المتبقية</div><div class="card-label-en">Remaining Pages</div>
         <div class="card-value card-accent-warn" id="remainingPages">604</div>
       </div>
 
 	<!-- ══ INSERT THIS right after the Remaining Pages </div> card ══ -->
-      <div class="card" style="flex:1 1 auto;width:auto;gap:12px;padding:8px 16px;">
+      <div class="card" id="readListenCard" style="flex:1 1 auto;width:auto;gap:12px;padding:8px 16px;">
         <!-- Title + small Go button -->
         <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
           <div style="font-size:12px;font-weight:400;opacity:.8;">📖 اقرأ أو استمع / Read or Listen</div>
@@ -5002,10 +5002,21 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   .mem-stat-item{font-size:3vw !important;gap:1vw !important;}
   .green-badge,.yellow-badge{font-size:2.6vw !important;padding:0.6vw 1.4vw !important;}
 
-  /* Read or Listen box (its title/button are inline-styled, so target directly) */
-  .card div[style*="font-size:12px"]{font-size:3.2vw !important;}
+  /* Remaining Pages card: its width was hard-coded to 110px inline, so the
+     enlarged label wrapped onto a second line. Let it size to its content. */
+  #remainingCard{width:auto !important;min-width:24vw !important;padding:1.6vw 2.8vw !important;}
+  #remainingCard .card-label,#remainingCard .card-label-en{white-space:nowrap !important;}
+
+  /* Read or Listen: title, button, labels and inputs are all inline-styled,
+     so they are targeted here explicitly (!important beats inline styles). */
+  #readListenCard div[style*="font-size:12px"]{font-size:3.2vw !important;}
   #qnGoBtn{font-size:3vw !important;padding:1.2vw 3.4vw !important;}
-  #qnSurahSel,#qnAyahInp,#qnPageInp{font-size:2.9vw !important;}
+  #readListenCard span[style*="font-size:11px"]{font-size:3vw !important;}
+  #readListenCard span[style*="font-size:9px"]{font-size:2.5vw !important;}
+  #qnSurah{width:40vw !important;font-size:3vw !important;padding:1.2vw 2vw !important;}
+  #qnAyah,#qnPageInput{width:14vw !important;font-size:3vw !important;padding:1.2vw 1vw !important;}
+  /* Let the controls row wrap now that its contents are larger. */
+  #readListenCard div[style*="nowrap"]{flex-wrap:wrap !important;gap:2vw !important;}
 
   /* Juz selector row: Select Juz / Level / Apply to all */
   .selector-label{font-size:3vw !important;}
