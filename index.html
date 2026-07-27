@@ -2714,7 +2714,7 @@ window.navigateModal = function(delta) {
       card.setAttribute('role','button');
       let badges='';
       if(strong>0||light>0){badges=`<div style="display:flex;gap:3px;margin-top:2px;justify-content:center;">`;if(strong>0)badges+=`<span style="background:#4caf7d;width:6px;height:6px;border-radius:50%;display:inline-block;"></span>`;if(light>0)badges+=`<span style="background:#e0b94a;width:6px;height:6px;border-radius:50%;display:inline-block;"></span>`;badges+=`</div>`;}
-      else badges=`<div style="font-size:9px;opacity:.6;margin-top:2px;">0/${info.pages.length}</div>`;
+      else badges=`<div class="sc-zero" style="font-size:9px;opacity:.6;margin-top:2px;">0/${info.pages.length}</div>`;
       const _ws=weakStore();const juzWeak=info.pages.some(pg=>(_ws[pg]||[]).length>0);
       const juzStrip=juzWeak?`<span class="weak-strip" title="يحتوي كلمات تحتاج تدريباً / Has words to practice"></span>`:'';
       card.innerHTML=`${juzStrip}<div class="sc-num" style="margin-bottom:1px;">${j}</div><div class="surah-name">جزء / Juz</div>${badges}`;
@@ -4975,6 +4975,16 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
 
   .open-page-icon{width:4.6vw !important;height:4.2vw !important;font-size:1.9vw !important;
     background-size:3.4vw 3vw !important;background-position:0.6vw 0.6vw !important;}
+}
+
+/* Hide the "0/21" placeholder badge in the Juz boxes on phones and tablets.
+   pointer:coarse targets touch devices in BOTH portrait and landscape,
+   regardless of how wide their viewport reports (some phones report ~720px
+   portrait and ~1600px landscape, so width alone is not a reliable signal).
+   Desktop keeps the badge. Once a Juz has memorized pages the coloured dots
+   replace this badge anyway. */
+@media (pointer:coarse){
+  .summary-card .sc-zero{display:none !important;}
 }
 
 @keyframes mobFlash{
