@@ -5026,10 +5026,14 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   #qnSurah{width:19vw !important;font-size:3.2vw !important;padding:1.2vw 1.4vw !important;}
   #qnAyah,#qnPageInput{width:8.5vw !important;font-size:3.2vw !important;padding:1.2vw 0.6vw !important;}
 
-  /* Keep the three controls on ONE line inside the card. */
-  #readListenCard > div:nth-child(2){flex-wrap:nowrap !important;gap:1.2vw !important;
-    justify-content:space-between !important;}
-  #readListenCard > div:nth-child(2) > div{gap:0.8vw !important;flex:0 1 auto !important;min-width:0 !important;}
+  /* Keep the three controls on ONE line, packed together in the centre --
+     space-between was stretching them across the full card width, which read
+     as pointless gaps between the boxes. */
+  #readListenCard > div:nth-child(2){flex-wrap:nowrap !important;gap:1.6vw !important;
+    justify-content:center !important;width:auto !important;}
+  #readListenCard > div:nth-child(2) > div{gap:0.8vw !important;flex:0 0 auto !important;min-width:0 !important;}
+  /* And don't let the card itself stretch wider than its content needs. */
+  #readListenCard{justify-self:start !important;}
 
   /* Card row layout: Memorized Pages spans the full width on the first line,
      then Remaining Pages and Read or Listen sit side by side on the second --
