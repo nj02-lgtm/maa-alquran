@@ -2506,7 +2506,7 @@ window.navigateModal = function(delta) {
     let curS=1, curA=1;
     const firstEl=_wpWrap.querySelector('.mushaf-word[data-verse-key]');
     if(firstEl){const p=firstEl.dataset.verseKey.split(':');curS=+p[0]||1;curA=+p[1]||1;}
-    const opts=QN_SURAHS.map((s,i)=>{const n=surahNames[i+1]||{};return `<option value="${i+1}">${i+1}. ${n.ar||s[0]} / ${n.en||''}</option>`;}).join('');
+    const opts=QN_SURAHS.map((s,i)=>{const n=surahNames[i+1]||{};const en=(n.en||'').replace(/-/g,' ');return `<option value="${i+1}">${i+1}. ${n.ar||s[0]} / ${en}</option>`;}).join('');
     su1.innerHTML=opts; su2.innerHTML=opts;
     const fillAyahs=(sel,s,def)=>{const last=surahAyahCount(s)||1;let h='';for(let x=1;x<=last;x++)h+=`<option>${x}</option>`;sel.innerHTML=h;sel.value=String(Math.min(def||last,last));};
     if(!su1.dataset.rp){
@@ -4945,6 +4945,8 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   #readListenCard > div:first-child > div{font-size:12px !important;font-weight:700 !important;
     opacity:.95 !important;white-space:nowrap !important;}
   #qnGoBtn{white-space:nowrap !important;flex:0 0 auto !important;}
+  /* Surah dropdown 1.2x wider than its inline 150px. */
+  #qnSurah{width:180px !important;max-width:100% !important;}
 
   /* Portrait arrangement of the Read or Listen card:
         line 1:  📖 اقرأ أو استمع / Read or Listen
