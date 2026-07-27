@@ -4983,7 +4983,13 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   /* The Surah dropdown now flexes into whatever width is left rather than
      being pinned, so widening the Ayah box takes room from it automatically. */
   #readListenCard > div:nth-child(2) > div{min-width:0 !important;}
-  #qnSurah{flex:1 1 auto !important;width:auto !important;min-width:0 !important;max-width:100% !important;}
+  /* Portrait: cap the Surah dropdown so the Ayah box always fits on the same
+     row inside the card. Without a cap the select sizes to its widest option
+     (28 chars, e.g. "60. الممتحنة / Al Mumtahinah") and pushes the Ayah box
+     past the card edge. 150px leaves room for both labels and the 78px Ayah
+     box within a 360px viewport. */
+  #qnSurah{flex:1 1 auto !important;width:auto !important;min-width:0 !important;
+    max-width:150px !important;}
 
   /* Portrait arrangement of the Read or Listen card:
         line 1:  📖 اقرأ أو استمع / Read or Listen
