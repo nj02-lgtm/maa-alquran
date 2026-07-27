@@ -4947,7 +4947,12 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   /* Task 5: Memorized Pages matched to Remaining Pages. Both already share the
      .card-label / .card-label-en classes above, so the headings are identical;
      this matches the card padding and the big number too. */
-  .card-mem{padding:8px 10px !important;}
+  /* Reduced side padding so the Strong badge sits closer to the card edge,
+     giving the counts more usable width. */
+  .card-mem{padding:8px 3px !important;}
+  /* The stats row was centred, which also held the badges away from the edges;
+     spreading it edge-to-edge puts that space between the numbers instead. */
+  .cards-row .mem-stats{justify-content:space-between !important;padding:0 !important;}
   /* Slimmer badges so 3-digit Strong/Light counts have clear space. */
   .green-badge,.yellow-badge{font-size:9px !important;padding:2px 5px !important;}
 
