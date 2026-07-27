@@ -5004,9 +5004,16 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
      title takes flex:1 1 auto, so the long title pushed the range onto its own
      line. nowrap plus a shrinkable title keeps them side by side; the title
      text wraps within its own box if it needs to. */
-  .panel-header{flex-wrap:nowrap !important;}
+  .panel-header{flex-wrap:wrap !important;}
   .panel.mobile-collapsible > .panel-header .panel-title{min-width:0 !important;}
   .panel-sub{flex:0 0 auto !important;white-space:nowrap !important;}
+
+  /* "📋 التفاصيل الكاملة / Full Details" gets a row to itself, full width,
+     below the panel title. flex-basis:100% forces the wrap onto a new line. */
+  .panel-header #openModalBtn{
+    flex:0 0 100% !important;width:100% !important;
+    margin-top:6px !important;justify-content:center !important;
+  }
 
   /* Portrait arrangement of the Read or Listen card:
         line 1:  📖 اقرأ أو استمع / Read or Listen
