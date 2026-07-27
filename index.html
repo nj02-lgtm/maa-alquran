@@ -4964,7 +4964,10 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   .summary-card .sc-num{font-size:4.2vw !important;margin-bottom:0.4vw !important;}
   .summary-card .surah-name{font-size:2.3vw !important;}
 
-  .page-cell{min-height:18vw !important;padding:5vw 0.8vw 0.8vw !important;}
+  /* 5 columns fit comfortably at this viewport width. Kept in this isolated
+     band so <=700px phones stay at their tuned 4 columns. */
+  .page-grid{grid-template-columns:repeat(5,1fr) !important;gap:1vw !important;}
+  .page-cell{min-height:16vw !important;padding:4.4vw 0.6vw 0.6vw !important;}
   .page-number{font-size:4.2vw !important;}
   .page-cell .surah-name{font-size:2.3vw !important;}
   .page-cell .surah-name span[lang="en"]{font-size:2vw !important;}
