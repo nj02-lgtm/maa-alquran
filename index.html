@@ -5023,7 +5023,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   #readListenCard span span{font-size:3.1vw !important;}
 
   /* Row 2: the actual dropdown and inputs */
-  #qnSurah{width:46vw !important;font-size:3.5vw !important;padding:1.4vw 2.2vw !important;}
+  #qnSurah{width:auto !important;flex:1 1 auto !important;min-width:0 !important;font-size:3.5vw !important;padding:1.4vw 1.6vw !important;}
   #qnAyah,#qnPageInput{width:10vw !important;font-size:3.5vw !important;padding:1.4vw 0.6vw !important;}
 
   /* Keep the three controls on ONE line, packed together in the centre --
@@ -5037,10 +5037,12 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
      Page at the left. The DOM order is Surah, Ayah, Page, and in an RTL row
      the first item sits rightmost; setting it here means it no longer depends
      on inherited direction. */
-  #readListenCard > div:nth-child(2){flex-wrap:nowrap !important;gap:2.6vw !important;
+  #readListenCard > div:nth-child(2){flex-wrap:nowrap !important;gap:1.8vw !important;
     direction:rtl !important;flex-direction:row !important;
-    justify-content:center !important;width:auto !important;}
+    justify-content:flex-start !important;width:100% !important;}
   #readListenCard > div:nth-child(2) > div{gap:0.9vw !important;flex:0 0 auto !important;min-width:0 !important;}
+  /* Surah is the first group: let it grow into all the reclaimed space. */
+  #readListenCard > div:nth-child(2) > div:first-child{flex:1 1 auto !important;}
 
   /* Card row layout: Memorized Pages spans the full width on the first line,
      then Remaining Pages and Read or Listen sit side by side on the second --
@@ -5053,7 +5055,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   #remainingCard{grid-column:2 !important;min-width:0 !important;}
   /* Full-size dropdown + inputs need the whole width, so this card takes its
      own row rather than being squeezed beside Remaining Pages. */
-  #readListenCard{grid-column:1 / -1 !important;min-width:0 !important;padding:1.2vw 1vw !important;}
+  #readListenCard{grid-column:1 / -1 !important;min-width:0 !important;padding:1.2vw 0.3vw !important;}
 
   /* Juz selector row: Select Juz / Level / Apply to all */
   .selector-label{font-size:3vw !important;}
