@@ -4927,8 +4927,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   /* "الصفحات المحفوظة / Memorized Pages" and "الصفحات المتبقية / Remaining
      Pages" -- larger and bold. The Arabic line and the English line under it
      are separate elements, so both are set. */
-  .card-label{font-size:14px !important;font-weight:700 !important;opacity:.95 !important;}
-  .card-label-en{font-size:12px !important;font-weight:700 !important;opacity:.85 !important;}
+  /* Kept bold, but sized to fit on ONE line each. The Remaining Pages card is
+     the narrow one in this 1.7fr/1fr row, so it sets the limit -- and bold
+     text is a few percent wider than regular, which is what pushed
+     "Remaining Pages" and "الصفحات المتبقية" onto a second line. nowrap
+     guarantees a single line; the sizes are still above the original 10/9px. */
+  .card-label{font-size:11px !important;font-weight:700 !important;opacity:.95 !important;
+    white-space:nowrap !important;}
+  .card-label-en{font-size:9.5px !important;font-weight:700 !important;opacity:.85 !important;
+    white-space:nowrap !important;}
 
   /* 1. Juz selector on top, Juz Pages below (visual reorder only; DOM unchanged) */
   .layout-row > .panel:nth-child(1){order:2;}
