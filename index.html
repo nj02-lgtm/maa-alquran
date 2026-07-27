@@ -4946,6 +4946,27 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     opacity:.95 !important;white-space:nowrap !important;}
   #qnGoBtn{white-space:nowrap !important;flex:0 0 auto !important;}
 
+  /* Portrait arrangement of the Read or Listen card:
+        line 1:  📖 اقرأ أو استمع / Read or Listen
+        line 2:  السورة  |  الآية
+        line 3:  الصفحة  |  Go
+     The title/Go and the three controls live in two separate wrapper divs, so
+     display:contents dissolves those wrappers and lets all five items be placed
+     directly on one grid. Wrapped in @supports because without display:contents
+     the wrappers would become grid items themselves and the layout would break;
+     unsupported browsers simply keep the existing single-row layout. */
+  @supports (display:contents){
+    #readListenCard{display:grid !important;grid-template-columns:1fr auto !important;
+      align-items:center !important;gap:6px 10px !important;}
+    #readListenCard > div{display:contents !important;}
+    #readListenCard > div:nth-child(1) > div{grid-column:1 / -1 !important;grid-row:1 !important;
+      text-align:center !important;}
+    #readListenCard > div:nth-child(2) > div:nth-child(1){grid-column:1 !important;grid-row:2 !important;}
+    #readListenCard > div:nth-child(2) > div:nth-child(2){grid-column:2 !important;grid-row:2 !important;}
+    #readListenCard > div:nth-child(2) > div:nth-child(3){grid-column:1 !important;grid-row:3 !important;}
+    #qnGoBtn{grid-column:2 !important;grid-row:3 !important;justify-self:stretch !important;}
+  }
+
   /* 1. Juz selector on top, Juz Pages below (visual reorder only; DOM unchanged) */
   .layout-row > .panel:nth-child(1){order:2;}
   .layout-row > .panel:nth-child(2){order:1;}
