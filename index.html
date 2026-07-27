@@ -5032,7 +5032,13 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   /* Only the SPACING is tightened here -- the dropdown and input widths are
      left at full size. space-between was pushing the three groups apart to
      fill the card; centring them with a small gap removes those gaps. */
+  /* Explicit RTL so the order on screen is, right to left:
+     السورة | الآية | الصفحة  -- i.e. Surah at the right, Ayah in the middle,
+     Page at the left. The DOM order is Surah, Ayah, Page, and in an RTL row
+     the first item sits rightmost; setting it here means it no longer depends
+     on inherited direction. */
   #readListenCard > div:nth-child(2){flex-wrap:nowrap !important;gap:2.6vw !important;
+    direction:rtl !important;flex-direction:row !important;
     justify-content:center !important;width:auto !important;}
   #readListenCard > div:nth-child(2) > div{gap:0.9vw !important;flex:0 0 auto !important;min-width:0 !important;}
 
