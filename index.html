@@ -4326,6 +4326,12 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   }
   /* One point smaller on phones so both labels fit alongside the page nav. */
   .mushaf-header-label{font-size:10px !important;}
+
+  /* The ‹ › buttons carry a fixed height:26px while the page-number box is
+     sized by its content (~20px), so the arrows stood taller than it.
+     Stretching the group makes all three share the page number's height. */
+  .mushaf-header-center{align-items:stretch !important;}
+  .mushaf-nav-btn{height:auto !important;min-height:0 !important;padding:1px 8px !important;}
   .mushaf-header-label.left{
     overflow:visible !important;text-overflow:clip !important;white-space:nowrap !important;
   }
