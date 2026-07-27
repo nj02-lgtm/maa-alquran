@@ -5086,66 +5086,6 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
    portrait and ~1600px landscape, so width alone is not a reliable signal).
    Desktop keeps the badge. Once a Juz has memorized pages the coloured dots
    replace this badge anyway. */
-/* ── Small phones (<=375px CSS width, e.g. Galaxy A21S in portrait) ────────
-   Confirmed on device: A21S reports 360x800 CSS (DPR 2, 720x1600 physical),
-   so PORTRAIT lands in the <=700px phone band -- the same one the iPhone 14
-   (390px) uses -- and the vw band above only affects it in LANDSCAPE (800px).
-   Capping at 375px lifts the text on 360px-class phones while leaving the
-   iPhone 14 and other >=390px phones exactly as they are.
-   Values are px, not vw: this band spans a narrow width range, so fixed sizes
-   are more predictable here. */
-@media (max-width:375px){
-  /* Juz boxes */
-  .summary-card{min-height:86px !important;padding:8px 2px !important;}
-  .summary-card .sc-num{font-size:24px !important;margin-bottom:2px !important;}
-  .summary-card .surah-name{font-size:14px !important;}
-
-  /* Page boxes */
-  .page-cell{min-height:104px !important;padding:30px 3px 4px !important;}
-  .page-number{font-size:24px !important;}
-  .page-cell .surah-name{font-size:14px !important;}
-  .page-cell .surah-name span[lang="en"]{font-size:12px !important;}
-  .page-cell .surah-name-extra{font-size:11px !important;}
-
-  /* Headings and labels around the tables */
-  .welcome-main{font-size:19px !important;}
-  .welcome-sub{font-size:14px !important;}
-  .date-label{font-size:13px !important;}
-  .panel-title{font-size:17px !important;}
-  .panel-sub{font-size:13px !important;}
-  .step-badge{width:26px !important;height:26px !important;font-size:15px !important;}
-  .step-badge.step-1{width:30px !important;height:30px !important;font-size:17px !important;}
-  .resettip{font-size:12px !important;}
-
-  /* Student selector */
-  .student-area label{font-size:14px !important;}
-  #studentSelect{font-size:14px !important;}
-  .add-student-btn,.delete-student-btn{font-size:13px !important;}
-
-  /* Memorized / Remaining cards */
-  .card-label{font-size:13px !important;}
-  .card-label-en{font-size:11px !important;}
-  .card-value{font-size:22px !important;}
-  .mem-stat-item{font-size:13px !important;}
-  .green-badge,.yellow-badge{font-size:11px !important;padding:2px 6px !important;}
-
-  /* Read or Listen */
-  #readListenCard > div:first-child > div{font-size:15px !important;}
-  #qnGoBtn{font-size:14px !important;}
-  #readListenCard span{font-size:14px !important;}
-  #readListenCard span span{font-size:11px !important;}
-  #qnSurah{font-size:14px !important;}
-  #qnAyah,#qnPageInput{font-size:14px !important;}
-
-  /* Juz selector row + legend */
-  .selector-label .lbl-ar2{font-size:12px !important;}
-  .selector-label .lbl-en2{font-size:10px !important;}
-  #juzSelect,#bulkLevelSelect{font-size:13px !important;}
-  .btn-primary .lbl-ar{font-size:13px !important;}
-  .btn-primary .lbl-en{font-size:11px !important;}
-  .jl-item,.jl-item b{font-size:12px !important;}
-}
-
 @media (pointer:coarse){
   .summary-card .sc-zero{display:none !important;}
 }
