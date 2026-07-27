@@ -4950,6 +4950,30 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   /* 4. Gentle highlight when the jump lands on a page */
   .page-cell.mob-flash{animation:mobFlash 1.4s ease;}
 }
+
+/* ── Large-viewport phones (e.g. Galaxy A21S) ─────────────────────────────
+   Some phones report a CSS viewport of ~720px instead of the usual ~360px.
+   Everything is then laid out in twice as many CSS pixels on the same physical
+   screen, so text that looks right on other phones appears half-size here --
+   an 18px number occupies 2.5% of the width instead of 5%.
+   This band scales the dashboard boxes with the viewport (vw units) so they
+   appear the same physical size as on a normal phone. min-width:701px keeps it
+   completely clear of the tuned <=700px phone layout. */
+@media (min-width:701px) and (max-width:820px){
+  .summary-card{min-height:15vw !important;font-size:2.1vw !important;padding:1.2vw 0.4vw !important;}
+  .summary-card .sc-num{font-size:4.2vw !important;margin-bottom:0.4vw !important;}
+  .summary-card .surah-name{font-size:2.3vw !important;}
+
+  .page-cell{min-height:18vw !important;padding:5vw 0.8vw 0.8vw !important;}
+  .page-number{font-size:4.2vw !important;}
+  .page-cell .surah-name{font-size:2.3vw !important;}
+  .page-cell .surah-name span[lang="en"]{font-size:2vw !important;}
+  .page-cell .surah-name-extra{font-size:1.8vw !important;}
+
+  .open-page-icon{width:6vw !important;height:5.4vw !important;font-size:2.2vw !important;
+    background-size:4.2vw 3.8vw !important;background-position:0.8vw 0.8vw !important;}
+}
+
 @keyframes mobFlash{
   0%,100%{box-shadow:0 0 0 0 rgba(212,160,23,0);}
   22%{box-shadow:0 0 0 3px rgba(212,160,23,.85);}
