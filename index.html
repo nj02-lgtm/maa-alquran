@@ -4999,6 +4999,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   #qnSurah{flex:1 1 auto !important;width:auto !important;min-width:0 !important;
     max-width:150px !important;}
 
+  /* Panel header: keep the page range (ص 1 – 21) on the SAME row as the title
+     instead of wrapping below it. The header is a wrapping flex row and the
+     title takes flex:1 1 auto, so the long title pushed the range onto its own
+     line. nowrap plus a shrinkable title keeps them side by side; the title
+     text wraps within its own box if it needs to. */
+  .panel-header{flex-wrap:nowrap !important;}
+  .panel.mobile-collapsible > .panel-header .panel-title{min-width:0 !important;}
+  .panel-sub{flex:0 0 auto !important;white-space:nowrap !important;}
+
   /* Portrait arrangement of the Read or Listen card:
         line 1:  📖 اقرأ أو استمع / Read or Listen
         line 2:  السورة  |  الآية
