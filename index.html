@@ -4311,19 +4311,30 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
      surah-name column keeps the flexible share and ellipsises instead, since
      it is the one that can legitimately hold several surah names. */
   .mushaf-header-band{
-    grid-template-columns:minmax(0,1fr) auto max-content !important;
+    /* Symmetric side columns so the ‹ 451 › group sits in the true centre of
+       the header. With the last column at max-content the side shares were
+       unequal, which pushed the page number off-centre. The smaller label font
+       and trimmed close button below leave enough room for both names at an
+       equal share. */
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) !important;
     /* The close button is 38px at left:18px, so 60px of padding was reserved
        to keep text out from under it -- that space came straight out of the
-       surah-name column, which is why "سورة الصافات" was cut to "سورة الـ…".
-       The button is trimmed below, so less needs reserving here. */
-    padding-left:44px !important;
+       surah-name column. The button is trimmed below, so less is needed. */
+    padding-left:14px !important;
   }
+  /* Keep the header group visually centred: the reserved 44px on the left is
+     mirrored on the right so the centre column lands mid-header. */
+  .mushaf-header-band{padding-right:14px !important;}
   /* Smaller, tucked-in close button: frees ~16px for the surah name while
      still being a comfortable tap target (32px). */
   .mushaf-close-btn{
     width:32px !important;height:32px !important;
-    top:9px !important;left:8px !important;font-size:15px !important;
+    top:52px !important;left:8px !important;font-size:15px !important;
+    background:rgba(31,79,123,.35) !important;
+    box-shadow:none !important;
+    backdrop-filter:blur(2px) !important;-webkit-backdrop-filter:blur(2px) !important;
   }
+  .mushaf-close-btn:active{background:rgba(31,79,123,.8) !important;}
   /* One point smaller on phones so both labels fit alongside the page nav. */
   .mushaf-header-label{font-size:10px !important;}
 
@@ -4333,7 +4344,8 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .mushaf-header-center{align-items:stretch !important;}
   .mushaf-nav-btn{height:auto !important;min-height:0 !important;padding:1px 8px !important;}
   .mushaf-header-label.left{
-    overflow:visible !important;text-overflow:clip !important;white-space:nowrap !important;
+    overflow:hidden !important;text-overflow:ellipsis !important;white-space:nowrap !important;
+    text-align:start !important;
   }
   #pageContentModal.focus-mode #pageModalBody{
     padding-top:0 !important;
