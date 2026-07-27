@@ -4937,6 +4937,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   .card-label-en{font-size:9.5px !important;font-weight:700 !important;opacity:.85 !important;
     white-space:nowrap !important;}
 
+  /* "📖 اقرأ أو استمع / Read or Listen" is a single element holding both the
+     Arabic and the English, so one size covers both. Set slightly above the
+     card headings (11px) and bold, and kept on one line with the Go button --
+     nowrap on all three so the row can never break. */
+  #readListenCard > div:first-child{flex-wrap:nowrap !important;gap:8px !important;}
+  #readListenCard > div:first-child > div{font-size:12px !important;font-weight:700 !important;
+    opacity:.95 !important;white-space:nowrap !important;}
+  #qnGoBtn{white-space:nowrap !important;flex:0 0 auto !important;}
+
   /* 1. Juz selector on top, Juz Pages below (visual reorder only; DOM unchanged) */
   .layout-row > .panel:nth-child(1){order:2;}
   .layout-row > .panel:nth-child(2){order:1;}
