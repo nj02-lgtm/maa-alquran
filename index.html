@@ -5023,28 +5023,31 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   #readListenCard span span{font-size:3.1vw !important;}
 
   /* Row 2: the actual dropdown and inputs */
-  #qnSurah{width:19vw !important;font-size:3.2vw !important;padding:1.2vw 1.4vw !important;}
-  #qnAyah,#qnPageInput{width:8.5vw !important;font-size:3.2vw !important;padding:1.2vw 0.6vw !important;}
+  #qnSurah{width:42vw !important;font-size:3.5vw !important;padding:1.4vw 2.2vw !important;}
+  #qnAyah,#qnPageInput{width:15vw !important;font-size:3.5vw !important;padding:1.4vw 1vw !important;}
 
   /* Keep the three controls on ONE line, packed together in the centre --
      space-between was stretching them across the full card width, which read
      as pointless gaps between the boxes. */
-  #readListenCard > div:nth-child(2){flex-wrap:nowrap !important;gap:1.6vw !important;
+  /* Only the SPACING is tightened here -- the dropdown and input widths are
+     left at full size. space-between was pushing the three groups apart to
+     fill the card; centring them with a small gap removes those gaps. */
+  #readListenCard > div:nth-child(2){flex-wrap:nowrap !important;gap:0.8vw !important;
     justify-content:center !important;width:auto !important;}
-  #readListenCard > div:nth-child(2) > div{gap:0.8vw !important;flex:0 0 auto !important;min-width:0 !important;}
-  /* And don't let the card itself stretch wider than its content needs. */
-  #readListenCard{justify-self:start !important;}
+  #readListenCard > div:nth-child(2) > div{gap:0.5vw !important;flex:0 0 auto !important;min-width:0 !important;}
 
   /* Card row layout: Memorized Pages spans the full width on the first line,
      then Remaining Pages and Read or Listen sit side by side on the second --
      so Read or Listen is level with Remaining Pages instead of being pushed
      onto a line of its own by the plain flex wrap. */
-  .cards-row{display:grid !important;grid-template-columns:26vw 1fr !important;
+  .cards-row{display:grid !important;grid-template-columns:1.6fr 1fr !important;
     gap:1.4vw !important;align-items:stretch !important;}
   .cards-row > .card{width:auto !important;max-width:none !important;min-width:0 !important;}
-  .card-mem{grid-column:1 / -1 !important;}
-  #remainingCard{grid-column:1 !important;min-width:0 !important;}
-  #readListenCard{grid-column:2 !important;min-width:0 !important;padding:1.2vw 1.6vw !important;}
+  .card-mem{grid-column:1 !important;}
+  #remainingCard{grid-column:2 !important;min-width:0 !important;}
+  /* Full-size dropdown + inputs need the whole width, so this card takes its
+     own row rather than being squeezed beside Remaining Pages. */
+  #readListenCard{grid-column:1 / -1 !important;min-width:0 !important;padding:1.2vw 1vw !important;}
 
   /* Juz selector row: Select Juz / Level / Apply to all */
   .selector-label{font-size:3vw !important;}
