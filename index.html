@@ -4305,6 +4305,17 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   #pageContentModal.focus-mode .mushaf-header-band{
     padding-top:5px !important;padding-bottom:5px !important;min-height:0 !important;
   }
+  /* The Juz label ("الجزء السابع") sits in the last header column, which was a
+     minmax(0,1fr) share and so got truncated with an ellipsis on narrower
+     phones. Sizing that column to its content lets the label show in full; the
+     surah-name column keeps the flexible share and ellipsises instead, since
+     it is the one that can legitimately hold several surah names. */
+  .mushaf-header-band{
+    grid-template-columns:minmax(0,1fr) auto max-content !important;
+  }
+  .mushaf-header-label.left{
+    overflow:visible !important;text-overflow:clip !important;white-space:nowrap !important;
+  }
   #pageContentModal.focus-mode #pageModalBody{
     padding-top:0 !important;
   }
