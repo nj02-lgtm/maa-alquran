@@ -4297,6 +4297,20 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   #pageContentModal.focus-mode .mushaf-page-wrap .mushaf-line{
     flex:1 1 0 !important;min-height:0 !important;
   }
+  /* Shift the whole page up a few pixels in full view: the last line was
+     sitting slightly under the browser bar on iPhone. The space is taken from
+     above -- the header band and the top of the page frame -- so the overall
+     height is unchanged and devices that were already fine (A21S) only move
+     up by the same few pixels rather than gaining a gap. */
+  #pageContentModal.focus-mode .mushaf-header-band{
+    padding-top:2px !important;padding-bottom:2px !important;min-height:0 !important;
+  }
+  #pageContentModal.focus-mode #pageModalBody{
+    padding-top:0 !important;
+  }
+  #pageContentModal.focus-mode .mushaf-page-wrap{
+    margin-top:-6px !important;
+  }
   /* Keep the last line clear of the phone's home indicator / browser bar,
      which was clipping the bottom of the final ayah on iPhone. */
   #pageContentModal.focus-mode .mushaf-page-wrap{
