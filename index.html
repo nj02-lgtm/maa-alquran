@@ -1955,19 +1955,53 @@ async function prefetchPageTafsir(){
     const k = w.dataset.verseKey;
     if(k && keys.indexOf(k) === -1) keys.push(k);
   });
-  /* ONE request at a time. Running several in parallel against the slow tafsir
-     API meant a tap by the user queued behind them, making the panel feel
-     slower than before prefetching existed. */
   const wait = (ms)=>new Promise(r=>setTimeout(r,ms));
+
+  /* FAST PATH: one request for the whole page instead of one per ayah.
+     A page holds 15-20 verses, so the per-ayah loop meant 15-20 round trips
+     before the cache was warm -- minutes on a slow connection. quran.com can
+     return every tafsir on a page in a single call. If this endpoint is
+     unavailable or its shape differs, we fall through to the per-ayah loop
+     below, so behaviour is never worse than before. */
+  if(currentTafsir.api !== 'ksu' && modalPageNumber){
+    try{
+      const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      const t = setTimeout(function(){ try{ ctrl && ctrl.abort(); }catch(e){} }, 9000);
+      const res = await fetch(
+        `${CDN_VERSES}/quran/tafsirs/${currentTafsir.id}?page_number=${modalPageNumber}`,
+        ctrl ? {signal:ctrl.signal} : {}
+      );
+      clearTimeout(t);
+      if(res.ok){
+        const json = await res.json();
+        const list = json && (json.tafsirs || json.tafsir);
+        if(Array.isArray(list) && list.length){
+          let stored = 0;
+          for(const item of list){
+            const vk = item.verse_key || item.verseKey;
+            const raw = item.text || '';
+            if(!vk || !raw) continue;
+            const clean = raw.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+            if(!clean) continue;
+            OfflineDB.put('tafsir', `${currentTafsir.id}:${vk}`, clean).catch(()=>{});
+            stored++;
+          }
+          if(stored >= Math.max(1, Math.floor(keys.length * 0.6))) return;  // page covered
+        }
+      }
+    }catch(e){ /* fall through to the per-ayah path */ }
+  }
+
+  /* FALLBACK: one request at a time, yielding to anything the user is waiting
+     on, so a tap is never queued behind background traffic. */
   for(let n=0;n<keys.length;n++){
     if(myToken !== _prefetchToken) return;        // a newer page took over
-    /* Always yield to a tafsir the user is actually waiting for. */
     while(_tafsirUserBusy){
       await wait(300);
       if(myToken !== _prefetchToken) return;
     }
     try{ await fetchTafsirText(keys[n], {background:true}); }catch(e){}
-    await wait(250);                              // breathe between requests
+    await wait(200);
   }
 }
 window.prefetchPageTafsir = prefetchPageTafsir;
@@ -4861,7 +4895,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       if(window.__tafsirPrefetchTimer) clearTimeout(window.__tafsirPrefetchTimer);
       window.__tafsirPrefetchTimer = setTimeout(function(){
         if(typeof window.prefetchPageTafsir === 'function') window.prefetchPageTafsir();
-      }, 2500);   /* start well after the page has settled, so prefetch never competes with page/font loading */
+      }, 1200);   /* one batched request now, so it can start sooner */
     }).observe(pmb, {childList:true, subtree:true});
   }
   if(document.fonts && document.fonts.ready){
