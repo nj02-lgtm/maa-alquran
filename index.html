@@ -4398,6 +4398,12 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   }
   #pageContentModal.focus-mode .mushaf-page-wrap{
     margin-top:-3px !important;
+    /* A small, guaranteed bottom margin so the last line never sits flush
+       against the screen edge, plus the device's own safe-area inset (the
+       iPhone home indicator). This is a few pixels rather than the old ~60px
+       deduction, so it does not reopen the blank-space problem on the A21S. */
+    padding-bottom:calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+    box-sizing:border-box !important;
   }
   /* Keep the last line clear of the phone's home indicator / browser bar,
      which was clipping the bottom of the final ayah on iPhone. */
@@ -4585,10 +4591,26 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     if(!c || !c.classList.contains('focus-mode')) return;
     var box = c.querySelector('.page-modal-box');
     if(!box) return;
-    var vv = window.visualViewport;
 
-    /* Use the smallest height any API reports as visible -- different iOS
-       browsers disagree about whether their toolbars overlay the page. */
+    /* Prefer the browser's own dynamic viewport unit over any measurement we
+       make here. 100dvh already excludes whatever toolbars are showing, and it
+       updates as they appear and disappear -- which is exactly the problem the
+       old code tried to solve with a hard-coded 60px deduction for Chrome on
+       iOS. That guess was fragile (it breaks the moment a browser changes its
+       toolbar height) and it never actually got a chance to be compared,
+       because this function overwrote the CSS height on every device.
+       So: where dvh is supported, step aside and let the CSS do it. */
+    var supportsDvh = false;
+    try{ supportsDvh = !!(window.CSS && CSS.supports && CSS.supports('height','100dvh')); }catch(e){}
+
+    if(supportsDvh){
+      box.style.removeProperty('height');
+      return;
+    }
+
+    /* Fallback for older engines with no dvh (e.g. the A21S's WebView):
+       take the smallest height any API reports as genuinely visible. */
+    var vv = window.visualViewport;
     var candidates = [];
     if(vv && vv.height) candidates.push(vv.height);
     if(window.innerHeight) candidates.push(window.innerHeight);
@@ -4596,25 +4618,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       candidates.push(document.documentElement.clientHeight);
     }
     var h = candidates.length ? Math.min.apply(null, candidates) : 0;
-    if(!h) return;
-
-    /* Chrome on iOS keeps a bottom toolbar that it does NOT subtract from ANY
-       height API (visualViewport included), so a box sized to h still runs
-       underneath it. Padding inside the page proved useless -- spread across
-       15 flex lines it moved the last line by only a few px. The decisive fix
-       is to SHORTEN THE BOX ITSELF by the unreported toolbar amount, so its
-       bottom edge physically sits above the bar.
-       Safari reports its toolbar honestly (innerHeight - vv.height), so its
-       unreported amount is ~0 and nothing changes there. */
-    var ua = navigator.userAgent || '';
-    var isCriOS = /CriOS/.test(ua) && /iP(hone|od|ad)/.test(ua);
-    var reported = (vv && window.innerHeight)
-      ? Math.max(0, window.innerHeight - vv.height) : 0;
-    var unreported = isCriOS ? Math.max(0, 60 - reported) : 0;
-
-    box.style.height = Math.round(h - unreported) + 'px';
-
-
+    if(h) box.style.height = Math.round(h) + 'px';
   }
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize', applyViewportHeight);
