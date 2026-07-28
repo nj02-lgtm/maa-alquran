@@ -4405,13 +4405,11 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
     padding-bottom:calc(14px + env(safe-area-inset-bottom, 0px)) !important;
     box-sizing:border-box !important;
   }
-  /* The bottom page-number bar is the last child of the page wrap, so it is
-     the first thing clipped if the content is a few pixels too tall. Pin it so
-     it can never be shrunk or squeezed out -- the lines above it flex instead,
-     since they are the elastic part of the layout. */
-  #pageContentModal.focus-mode .page-bottom-nav{
-    flex:0 0 auto !important;margin:2px 0 0 !important;
-  }
+  /* Hide the bottom page-number bar in full view: the same page number and
+     prev/next arrows are already in the header at the top, so it is redundant
+     here -- and removing it gives the Qur'an lines that height back and takes
+     the cropping problem away entirely rather than working around it. */
+  #pageContentModal.focus-mode .page-bottom-nav{display:none !important;}
   /* Keep the last line clear of the phone's home indicator / browser bar,
      which was clipping the bottom of the final ayah on iPhone. */
   #pageContentModal.focus-mode .mushaf-page-wrap{
