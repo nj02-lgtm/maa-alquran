@@ -4327,15 +4327,21 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .mushaf-header-band{padding-right:14px !important;}
   /* Push the Juz name hard against the left end of the header (it is the last
      column, so in RTL that is the far edge of the view). */
+  /* Pin the Juz name to the far (left) edge of the header on every width.
+     justify-self:start resolves to the RIGHT in an RTL grid, so the label sat
+     at the inner edge of its column and the leftover column width showed up as
+     a gap before the view edge -- and since that column is a 1fr share, the
+     gap differed between a 360px and a 390px phone. justify-self:end pins it
+     to the outer edge instead, so it is flush regardless of column width. */
   .mushaf-header-label.left{
-    text-align:left !important;justify-self:start !important;
-    padding-inline-start:0 !important;margin-inline-start:0 !important;
+    text-align:left !important;justify-self:end !important;
+    padding-inline:0 !important;margin-inline:0 !important;
   }
   /* Smaller, tucked-in close button: frees ~16px for the surah name while
      still being a comfortable tap target (32px). */
   .mushaf-close-btn{
     width:32px !important;height:32px !important;
-    top:47px !important;left:8px !important;font-size:15px !important;
+    top:44px !important;left:8px !important;font-size:15px !important;
     background:rgba(31,79,123,.35) !important;
     box-shadow:none !important;
     backdrop-filter:blur(2px) !important;-webkit-backdrop-filter:blur(2px) !important;
