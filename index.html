@@ -4402,8 +4402,15 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
        against the screen edge, plus the device's own safe-area inset (the
        iPhone home indicator). This is a few pixels rather than the old ~60px
        deduction, so it does not reopen the blank-space problem on the A21S. */
-    padding-bottom:calc(6px + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom:calc(14px + env(safe-area-inset-bottom, 0px)) !important;
     box-sizing:border-box !important;
+  }
+  /* The bottom page-number bar is the last child of the page wrap, so it is
+     the first thing clipped if the content is a few pixels too tall. Pin it so
+     it can never be shrunk or squeezed out -- the lines above it flex instead,
+     since they are the elastic part of the layout. */
+  #pageContentModal.focus-mode .page-bottom-nav{
+    flex:0 0 auto !important;margin:2px 0 0 !important;
   }
   /* Keep the last line clear of the phone's home indicator / browser bar,
      which was clipping the bottom of the final ayah on iPhone. */
