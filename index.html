@@ -4331,6 +4331,24 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   #pageContentModal.focus-mode .mushaf-page-wrap .mushaf-line{
     flex:1 1 0 !important;min-height:0 !important;
   }
+  /* Portrait full-view: consume the available height instead of allowing the
+     natural 15-line content height to leave a blank area on taller phones. */
+  @media (orientation:portrait){
+    #pageContentModal.focus-mode .mushaf-page-wrap{
+      height:100% !important;
+      max-height:100% !important;
+      box-sizing:border-box !important;
+      overflow:hidden !important;
+    }
+    #pageContentModal.focus-mode .mushaf-page-wrap .mushaf-line{
+      flex:1 1 0 !important;
+      min-height:0 !important;
+      box-sizing:border-box !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+    }
+  }
   /* Shift the whole page up a few pixels in full view: the last line was
      sitting slightly under the browser bar on iPhone. The space is taken from
      above -- the header band and the top of the page frame -- so the overall
@@ -4406,7 +4424,7 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
        sets a measured padding inline and an !important here would silently
        override it (which is exactly why the Chrome-on-iOS fix appeared to do
        nothing). */
-    padding-bottom:calc(14px + env(safe-area-inset-bottom, 0px));
+    padding-bottom:calc(6px + env(safe-area-inset-bottom, 0px));
   }
   /* ── Tafsir header (phone) ──────────────────────────────────────────────
      Two changes only: pull "التفسير / Translation" up closer to the ruler,
@@ -4598,22 +4616,34 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var h = candidates.length ? Math.min.apply(null, candidates) : 0;
     if(!h) return;
 
-    /* Chrome on iOS keeps a bottom toolbar that it does NOT subtract from ANY
-       height API (visualViewport included), so a box sized to h still runs
-       underneath it. Padding inside the page proved useless -- spread across
-       15 flex lines it moved the last line by only a few px. The decisive fix
-       is to SHORTEN THE BOX ITSELF by the unreported toolbar amount, so its
-       bottom edge physically sits above the bar.
-       Safari reports its toolbar honestly (innerHeight - vv.height), so its
-       unreported amount is ~0 and nothing changes there. */
+    /* Portrait full-view sizing: use the genuinely visible viewport, but do
+       NOT apply a fixed 60px deduction to every iPhone. That old rule made
+       the page unnecessarily short on some iPhones and created a different
+       result from Android. Chrome on iOS can overlay its bottom toolbar, so
+       use a small, measured safety allowance only when the viewport APIs
+       clearly fail to account for it. */
     var ua = navigator.userAgent || '';
-    var isCriOS = /CriOS/.test(ua) && /iP(hone|od|ad)/.test(ua);
-    var reported = (vv && window.innerHeight)
+    var isIOS = /iP(hone|od|ad)/.test(ua);
+    var isCriOS = /CriOS/.test(ua) && isIOS;
+    var isStandalone = (window.matchMedia &&
+      window.matchMedia('(display-mode: standalone)').matches) ||
+      (window.navigator.standalone === true);
+    var reportedToolbar = (vv && window.innerHeight)
       ? Math.max(0, window.innerHeight - vv.height) : 0;
-    var unreported = isCriOS ? Math.max(0, 60 - reported) : 0;
 
-    box.style.height = Math.round(h - unreported) + 'px';
+    /* Chrome on iOS can leave its bottom toolbar outside the reported visible
+       height. Only compensate in that exact case; Safari and Android keep all
+       available height. */
+    var toolbarSafety = 0;
+    if(isCriOS && !isStandalone && reportedToolbar < 8){
+      toolbarSafety = 44;
+    }
 
+    /* Tiny bottom allowance for the physical home indicator / screen edge. */
+    var bottomSafety = isIOS ? 6 : 4;
+    var usable = Math.max(0, h - toolbarSafety - bottomSafety);
+    box.style.height = Math.round(usable) + 'px';
+    box.style.setProperty('--mushaf-visible-height', Math.round(usable) + 'px');
 
   }
   if(window.visualViewport){
