@@ -5447,12 +5447,17 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
    the script) sizes the text up to suit -- which also closes the wide word
    spacing that appears when a small font is stretched across a wide screen. */
 @media (max-width:1024px) and (orientation:landscape){
+  /* Landscape is a clean reading surface: no controls, no close button and no
+     hamburger. The ✕ stays in PORTRAIT on both phones -- this rule is inside
+     the landscape query only. Rotate back to portrait to close the page. */
   .page-modal-audio,
   .tafsir-panel,
   .mushaf-splitter,
   #fullViewBtn,
   .focus-restore-btn,
-  .page-bottom-nav{display:none !important;}
+  .page-bottom-nav,
+  .mushaf-close-btn,
+  .mob-menu-btn{display:none !important;}
 
   .page-modal-content{height:100% !important;}
   #pageModalBody{
