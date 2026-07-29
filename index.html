@@ -4331,6 +4331,21 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   #pageContentModal.focus-mode .mushaf-page-wrap .mushaf-line{
     flex:1 1 0 !important;min-height:0 !important;
   }
+  /* The flex chain was broken between the page wrap and the lines: the wrap
+     stretched to fill the screen, and the lines were told to share the height,
+     but the two elements BETWEEN them -- the decorative border frame and the
+     text area -- were still sized by their content. So the frame stopped where
+     its text ended and the leftover height showed up as blank space beneath
+     it. Making both links in the chain grow lets the page reach the bottom. */
+  #pageContentModal.focus-mode .mushaf-border-frame{
+    flex:1 1 auto !important;display:flex !important;flex-direction:column !important;
+    min-height:0 !important;box-sizing:border-box !important;
+  }
+  #pageContentModal.focus-mode .mushaf-text-area{
+    flex:1 1 auto !important;display:flex !important;flex-direction:column !important;
+    justify-content:space-between !important;
+    min-height:0 !important;height:auto !important;box-sizing:border-box !important;
+  }
   /* Shift the whole page up a few pixels in full view: the last line was
      sitting slightly under the browser bar on iPhone. The space is taken from
      above -- the header band and the top of the page frame -- so the overall
@@ -4339,6 +4354,12 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   #pageContentModal.focus-mode .mushaf-header-band{
     padding-top:5px !important;padding-bottom:5px !important;min-height:0 !important;
   }
+  /* Option B: hide the ✕ in full view. The page frame now fills the screen, so
+     any position below the header would sit on Qur'an text, and reserving room
+     for it on the header line pushed the Juz name off the edge. The restore
+     button (two windows, bottom-right) returns to normal view, where ✕ is
+     available as usual. */
+  #pageContentModal.focus-mode .mushaf-close-btn{display:none !important;}
   /* The Juz label ("الجزء السابع") sits in the last header column, which was a
      minmax(0,1fr) share and so got truncated with an ellipsis on narrower
      phones. Sizing that column to its content lets the label show in full; the
