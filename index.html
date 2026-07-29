@@ -4550,9 +4550,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var _land = false;
     try{ _land = window.innerWidth > 700 && window.innerWidth <= 1024
                  && window.matchMedia('(orientation:landscape)').matches; }catch(e){}
-    var BASE  = _land ? ((pg === '1' || pg === '2') ? 34 : 30)
+    /* In landscape the ceiling is set high on purpose. The fit measures every
+       line and picks the largest size at which the densest one still fits, so
+       a high BASE does not mean "big text" -- it means "stop limiting it".
+       The result is the maximum size the width allows, which is also what
+       closes up the gaps between words: the spacing is whatever is left over
+       after the words, so bigger words leave less of it. */
+    var BASE  = _land ? ((pg === '1' || pg === '2') ? 70 : 64)
                       : ((pg === '1' || pg === '2') ? 23 : 20);
-    var FLOOR = _land ? 18 : ((pg === '1' || pg === '2') ? 14 : 15);
+    var FLOOR = _land ? 20 : ((pg === '1' || pg === '2') ? 14 : 15);
     var i, w;
 
     /* Reset any sizing/squeeze left from a previous run. */
@@ -5469,7 +5475,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   .mushaf-page-wrap{width:100% !important;max-width:none !important;margin:0 !important;}
   .mushaf-border-frame{border-width:10px 12px !important;width:100% !important;}
   .mushaf-text-area{padding:3px !important;}
-  .mushaf-line{width:99% !important;padding:1px 2px !important;}
+  /* Full width for the text, and no fixed line height -- the lines are free to
+     grow taller as the font grows, which is the trade you asked for. The words
+     stay justified edge to edge, so the first and last word of every line sit
+     exactly where the printed Mushaf puts them. */
+  .mushaf-line{
+    width:100% !important;padding:0 1px !important;
+    min-height:0 !important;height:auto !important;
+    justify-content:space-between !important;
+  }
   /* Apply the fitted size in landscape as well (the var rule lives in the
      <=700px band, which landscape does not match). */
   .mushaf-page-wrap .mushaf-word{font-size:var(--mushaf-fs,30px) !important;}
