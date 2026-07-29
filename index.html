@@ -4527,12 +4527,11 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
 (function(){
   var MOBILE = function(){
     if(window.innerWidth <= 700) return true;
-    /* Landscape phones report ~800px wide but are still phones, and the page
-       needs the same auto-fit there -- without it the font is fixed and lines
-       can overflow with no squeeze safety net. */
-    try{ return window.innerWidth <= 1024
-              && window.matchMedia('(orientation:landscape)').matches; }
-    catch(e){ return false; }
+    /* Landscape phones report 800-930px wide but are still phones, and the page
+       needs the same auto-fit there -- without it the font stays at the CSS
+       default and there is no squeeze safety net. Detected by shape, not
+       matchMedia, so it behaves identically on every browser. */
+    return (window.innerWidth > window.innerHeight) && window.innerWidth <= 1100;
   };
 
   /* ── Mushaf auto-fit: shrink word size until every line fits on one row ── */
@@ -4547,9 +4546,10 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     /* Landscape has roughly twice the width of portrait, so the page can carry
        a much larger font -- which also closes up the wide word spacing that
        appears when a line is stretched across a wide screen at a small size. */
-    var _land = false;
-    try{ _land = window.innerWidth > 700 && window.innerWidth <= 1024
-                 && window.matchMedia('(orientation:landscape)').matches; }catch(e){}
+    /* Landscape detected from the viewport shape rather than matchMedia:
+       width > height is unambiguous and cannot disagree between browsers,
+       which is what left one phone on the small default size. */
+    var _land = (window.innerWidth > window.innerHeight) && window.innerWidth <= 1100;
     /* In landscape the ceiling is set high on purpose. The fit measures every
        line and picks the largest size at which the densest one still fits, so
        a high BASE does not mean "big text" -- it means "stop limiting it".
@@ -5429,7 +5429,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
    In landscape the page therefore keeps its natural size and the panel
    scrolls instead, with the controls still hidden. Portrait is unchanged:
    there the page fits the screen and does not scroll. */
-@media (max-width:1024px) and (orientation:landscape){
+@media (max-width:1100px) and (orientation:landscape){
   #pageContentModal.focus-mode #pageModalBody{
     overflow-y:auto !important;-webkit-overflow-scrolling:touch !important;
     overscroll-behavior:contain !important;
@@ -5452,7 +5452,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
    width and height of the phone, and the auto-fit (enabled for landscape in
    the script) sizes the text up to suit -- which also closes the wide word
    spacing that appears when a small font is stretched across a wide screen. */
-@media (max-width:1024px) and (orientation:landscape){
+@media (max-width:1100px) and (orientation:landscape){
   /* Landscape is a clean reading surface: no controls, no close button and no
      hamburger. The ✕ stays in PORTRAIT on both phones -- this rule is inside
      the landscape query only. Rotate back to portrait to close the page. */
