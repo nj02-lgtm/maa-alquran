@@ -1276,6 +1276,12 @@ body.dark .tafsir-selector-row label {
     <!-- Page modal: mushaf LEFT + tafsir RIGHT -->
     <div class="modal-overlay" id="pageContentModal" role="dialog" aria-modal="true">
       <button class="mushaf-close-btn" id="closePageModalBtn">✕</button>
+      <!-- Landscape full-view only: floating shortcuts to the same Play and
+           Word-practice controls that live in .page-modal-audio (hidden in
+           landscape). Fixed position, so they overlay the page instead of
+           taking layout width away from the reading area. -->
+      <button class="landscape-side-btn" id="landscapePlayBtn" type="button" aria-label="تشغيل التلاوة / Play recitation" title="تشغيل التلاوة / Play recitation">▶</button>
+      <button class="landscape-side-btn" id="landscapePracticeBtn" type="button" aria-label="تحديد الكلمات للتدريب / Mark words for practice" title="تحديد الكلمات للتدريب / Mark words for practice">🖍️</button>
       <div class="page-modal-box">
 
         <div class="page-modal-content">
@@ -5108,6 +5114,66 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
 })();
 </script>
 <script>
+/* Landscape full-view: the floating Play / Word-practice icons just forward
+   their click to the real (CSS-hidden in landscape) #playPageBtn /
+   #wordPracticeBtn, so all existing logic -- current reciter, ayah/page
+   playback, weak-word marking and storage -- runs completely unchanged.
+   The icons then mirror the real controls' state back onto themselves. */
+(function(){
+  var lpBtn = document.getElementById('landscapePlayBtn');
+  var lwBtn = document.getElementById('landscapePracticeBtn');
+  if(!lpBtn || !lwBtn) return;
+
+  lpBtn.addEventListener('click', function(e){
+    e.preventDefault(); e.stopPropagation();
+    var real = document.getElementById('playPageBtn');
+    if(real) real.click();
+  });
+  lwBtn.addEventListener('click', function(e){
+    e.preventDefault(); e.stopPropagation();
+    var real = document.getElementById('wordPracticeBtn');
+    if(real) real.click();
+  });
+
+  function syncPlay(){
+    var a = document.getElementById('pageAudioPlayer');
+    var playing = !!(a && !a.paused && !a.ended && a.currentTime > 0);
+    lpBtn.textContent = playing ? '⏹' : '▶';
+    lpBtn.classList.toggle('playing', playing);
+    var lbl = playing ? 'إيقاف التلاوة / Stop recitation' : 'تشغيل التلاوة / Play recitation';
+    lpBtn.title = lbl;
+    lpBtn.setAttribute('aria-label', lbl);
+  }
+  function syncPractice(){
+    var real = document.getElementById('wordPracticeBtn');
+    if(!real) return;
+    var on = real.classList.contains('on');
+    lwBtn.textContent = on ? '✓' : '🖍️';
+    lwBtn.classList.toggle('on', on);
+    lwBtn.setAttribute('aria-label',
+      on ? 'إنهاء تحديد الكلمات / Done marking words' : 'تحديد الكلمات للتدريب / Mark words for practice');
+  }
+
+  var au = document.getElementById('pageAudioPlayer');
+  if(au){
+    ['play','playing','pause','ended','emptied'].forEach(function(evt){
+      au.addEventListener(evt, function(){ setTimeout(syncPlay, 20); });
+    });
+  }
+  /* #wordPracticeBtn/#playPageBtn live in .page-modal-audio, a sibling of
+     #pageModalBody -- not inside the subtree the page-render observer
+     watches, so mirroring their state this way cannot re-trigger that
+     observer (see the fitMushaf loop fix above for why that matters). */
+  var realPractice = document.getElementById('wordPracticeBtn');
+  if(realPractice && 'MutationObserver' in window){
+    new MutationObserver(syncPractice).observe(realPractice, {attributes:true, attributeFilter:['class']});
+  }
+
+  syncPlay();
+  syncPractice();
+})();
+</script>
+<script>
 /* Mobile: shorten <option> text in Level dropdown — CSS can't reach native options on phones */
 (function(){
   function shortenOptions(){
@@ -5474,6 +5540,12 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
 .step-arrow-css::before{width:3px !important;height:10px !important;right:-3px !important;}
 .step-arrow-css::after{transform:scale(2) !important;transform-origin:50% 100% !important;}
 
+/* Landscape-only Play / Word-practice shortcuts (see the button markup next
+   to #closePageModalBtn): hidden everywhere by default. The landscape query
+   below is what actually shows and positions them -- portrait keeps using
+   the normal .page-modal-audio row instead. */
+.landscape-side-btn{display:none;}
+
 /* ── Full view in LANDSCAPE on phones ────────────────────────────────────
    Landscape leaves very little height (roughly 360px on an A21S), and full
    view was still forcing all 15 lines to share it -- so the lines collapsed
@@ -5554,6 +5626,34 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   /* Apply the fitted size in landscape as well (the var rule lives in the
      <=700px band, which landscape does not match). */
   .mushaf-page-wrap .mushaf-word{font-size:var(--mushaf-fs,30px) !important;}
+
+  /* Play and Word-practice float over the page on the right edge instead of
+     living in .page-modal-audio (hidden above) -- fixed position, so they
+     never take width away from the reading area. Only shown in full view:
+     outside full view, landscape still has the normal (non-scrolling)
+     reading layout with its own controls reachable by rotating back.
+     env(safe-area-inset-right) keeps them clear of the notch/camera-housing
+     side on the iPhone, same reasoning as the .page-modal-box padding above. */
+  #pageContentModal.focus-mode .landscape-side-btn{
+    display:flex !important;
+    position:fixed;z-index:1095;
+    right:calc(8px + env(safe-area-inset-right,0px));
+    width:38px;height:38px;border-radius:50%;
+    align-items:center;justify-content:center;
+    border:none;cursor:pointer;padding:0;
+    font-size:17px;line-height:1;color:#fff;
+    box-shadow:0 2px 10px rgba(0,0,0,.3);
+    opacity:.72;transition:opacity .15s,background-color .15s;
+  }
+  #pageContentModal.focus-mode .landscape-side-btn:active{opacity:1;}
+  #pageContentModal.focus-mode #landscapePlayBtn{
+    top:calc(50% - 46px);background:#2f7d4f;
+  }
+  #pageContentModal.focus-mode #landscapePlayBtn.playing{background:#9b2c2c;}
+  #pageContentModal.focus-mode #landscapePracticeBtn{
+    top:calc(50% + 8px);background:#b07a00;
+  }
+  #pageContentModal.focus-mode #landscapePracticeBtn.on{background:#9b2c2c;}
 }
 
 @keyframes mobFlash{
