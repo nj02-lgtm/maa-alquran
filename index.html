@@ -4982,7 +4982,37 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   var pmb = document.getElementById('pageModalBody');
   if(pmb && 'MutationObserver' in window){
     var raf = null;
-    new MutationObserver(function(){
+    /* fitMushaf() ends by calling drawAyahHighlight/drawAyahHover (see
+       drawHighlightStrips), which remove and re-append the .ayah-hl-strip /
+       .ayah-hover-strip elements -- and those live inside this same
+       #pageModalBody subtree. Without this filter, that redraw counted as
+       "a new page rendered", which scheduled another fitMushafSettled, whose
+       own strip redraw counted as another mutation, forever -- a self-
+       sustaining refit loop that only existed while an ayah was highlighted
+       or hovered. Each fitMushafSettled also fires 3 fitMushaf() passes
+       (immediate/+200ms/+900ms), so the loop compounded fast: on the A21S's
+       slow CPU this was the real cause of a rotation appearing to hang for
+       10+ seconds (the iPhone's much faster CPU just burned through the
+       loop quickly enough that it went unnoticed). Genuine new-page
+       mutations (fresh .mushaf-line/.mushaf-word nodes swapped in) are
+       untouched and still trigger a refit as before. */
+    function isStripOnlyMutation(mutations){
+      for(var i=0;i<mutations.length;i++){
+        var m = mutations[i];
+        var nodes = [];
+        m.addedNodes.forEach(function(n){ nodes.push(n); });
+        m.removedNodes.forEach(function(n){ nodes.push(n); });
+        for(var j=0;j<nodes.length;j++){
+          var n = nodes[j];
+          if(n.nodeType!==1 || !(n.classList.contains('ayah-hl-strip') || n.classList.contains('ayah-hover-strip'))){
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+    new MutationObserver(function(mutations){
+      if(isStripOnlyMutation(mutations)) return;
       if(raf) cancelAnimationFrame(raf);
       raf = requestAnimationFrame(fitMushafSettled);
       /* Warm the tafsir cache for this page in the background so opening the
