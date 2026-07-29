@@ -4456,8 +4456,20 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .focus-restore-btn svg{display:block;pointer-events:none;}
   /* Slightly see-through when idle so it obscures as little text as possible;
      it can also be dragged anywhere on screen (see ensureFocusRestoreBtn). */
-  .focus-restore-btn{opacity:.62;transition:opacity .15s;}
-  .focus-restore-btn:active{opacity:1;}
+  /* No filled circle: the solid blue disc was blocking the Qur'an text behind
+     it. Only the icon strokes remain, in a muted colour, so the words stay
+     readable through it. It becomes solid while pressed for tap feedback. */
+  .focus-restore-btn{
+    background:transparent !important;
+    box-shadow:none !important;
+    color:rgba(31,79,123,.55) !important;
+    opacity:1;transition:background .15s,color .15s;
+    backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
+  }
+  .focus-restore-btn svg{filter:drop-shadow(0 0 1px rgba(255,255,255,.9));}
+  .focus-restore-btn:active{
+    background:rgba(30,78,122,.85) !important;color:#fff !important;
+  }
   .focus-restore-btn{
     position:fixed;right:10px;bottom:10px;z-index:1090;
     width:40px;height:40px;border-radius:50%;
