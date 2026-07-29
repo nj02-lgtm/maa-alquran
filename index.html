@@ -4456,23 +4456,13 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .focus-restore-btn svg{display:block;pointer-events:none;}
   /* Slightly see-through when idle so it obscures as little text as possible;
      it can also be dragged anywhere on screen (see ensureFocusRestoreBtn). */
-  /* No filled circle: the solid blue disc was blocking the Qur'an text behind
-     it. Only the icon strokes remain, in a muted colour, so the words stay
-     readable through it. It becomes solid while pressed for tap feedback. */
+  /* Back to the earlier look -- solid blue disc at ~62% opacity so the icon
+     reads clearly -- but a smaller circle, so it covers less of the text. */
+  .focus-restore-btn{opacity:.62;transition:opacity .15s;}
+  .focus-restore-btn:active{opacity:1;}
   .focus-restore-btn{
-    background:transparent !important;
-    box-shadow:none !important;
-    color:rgba(31,79,123,.55) !important;
-    opacity:1;transition:background .15s,color .15s;
-    backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
-  }
-  .focus-restore-btn svg{filter:drop-shadow(0 0 1px rgba(255,255,255,.9));}
-  .focus-restore-btn:active{
-    background:rgba(30,78,122,.85) !important;color:#fff !important;
-  }
-  .focus-restore-btn{
-    position:fixed;right:10px;bottom:10px;z-index:1090;
-    width:40px;height:40px;border-radius:50%;
+    position:fixed;right:8px;bottom:8px;z-index:1090;
+    width:30px;height:30px;border-radius:50%;
     background:rgba(30,78,122,.92);color:#fff;border:none;
     font-size:20px;cursor:pointer;display:none;
     align-items:center;justify-content:center;
@@ -4742,7 +4732,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
          inside and an arrow pointing inward, showing the screen shrinking back.
          Drawn as inline SVG so it renders identically on every device -- the
          Unicode/emoji equivalents are unreliable across Android and iOS. */
-      b.innerHTML = '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" '
+      b.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" '
         + 'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" '
         + 'stroke-linejoin="round" aria-hidden="true" focusable="false">'
         + '<rect x="2.5" y="2.5" width="19" height="19" rx="2.5" opacity="0.45"/>'
