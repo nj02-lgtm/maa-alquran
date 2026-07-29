@@ -1996,8 +1996,14 @@ async function prefetchPageTafsir(){
      on, so a tap is never queued behind background traffic. */
   for(let n=0;n<keys.length;n++){
     if(myToken !== _prefetchToken) return;        // a newer page took over
-    while(_tafsirUserBusy){
-      await wait(300);
+    /* Yield to anything the user is waiting on, and stay out of the way while
+       audio is playing -- the next ayah's audio needs the connection more than
+       a background tafsir does. */
+    while(_tafsirUserBusy || (function(){
+      var a = document.getElementById('pageAudioPlayer');
+      return a && !a.paused && !a.ended;
+    })()){
+      await wait(400);
       if(myToken !== _prefetchToken) return;
     }
     try{ await fetchTafsirText(keys[n], {background:true}); }catch(e){}
@@ -2336,7 +2342,20 @@ window.navigateModal = function(delta) {
     const reciterId = document.getElementById('reciterSelect')?.value || currentReciter;
     const url = await getAudioUrl(surahNum, ayahNum, reciterId);
     if(url){ audioElem.src = url; audioElem.play().catch(()=>{}); }
-    await loadTafsir(verseKey);
+
+    /* Tafsir must never delay or compete with playback.
+       - It was awaited here, so every ayah change -- including each step of a
+         page playthrough -- fired a tafsir request that the caller waited on.
+       - In full view the tafsir panel is hidden, so fetching it is pure waste.
+       - While audio is running, the panel is not what the user is looking at,
+         and the request steals bandwidth from the next ayah's audio.
+       So: never awaited, and skipped entirely in those two cases. */
+    const _inFocus = document.getElementById('pageContentModal')
+      ?.classList.contains('focus-mode');
+    const _audioRunning = audioElem && !audioElem.paused && !audioElem.ended;
+    if(!_inFocus && !_audioRunning){
+      loadTafsir(verseKey).catch(()=>{});
+    }
   }
 
   /* ── Word practice: mark weak words on review (yellow) pages ──
@@ -2489,7 +2508,15 @@ window.navigateModal = function(delta) {
     	// ayah reads it automatically. Otherwise selection is silent. Page-open
     	// auto-selection passes autoplay=false, so it never plays on its own.
     	if(autoplay && audioIntent) startPagePlayback(verseKey);
-    	await loadTafsir(verseKey);
+    	/* Not awaited, and skipped while audio is running or in full view, so a
+    	   tafsir request can never hold up playback or the page. */
+    	{
+    	  const _inFocus = document.getElementById('pageContentModal')
+    	    ?.classList.contains('focus-mode');
+    	  const _au = document.getElementById('pageAudioPlayer');
+    	  const _audioRunning = _au && !_au.paused && !_au.ended;
+    	  if(!_inFocus && !_audioRunning) loadTafsir(verseKey).catch(()=>{});
+    	}
 	}
 
 	let _toSelect=null;
