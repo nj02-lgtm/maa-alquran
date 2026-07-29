@@ -5475,6 +5475,21 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   .mushaf-page-wrap{width:100% !important;max-width:none !important;margin:0 !important;}
   .mushaf-border-frame{border-width:10px 12px !important;width:100% !important;}
   .mushaf-text-area{padding:3px !important;}
+
+  /* The dark strip down the side is the safe-area inset (beside the notch /
+     Dynamic Island). With viewport-fit=cover the page CAN paint there, it just
+     was not: the modal only filled the safe area, so the rest showed the page
+     background behind it. Painting the parchment colour across the whole
+     viewport removes the black band, while the text itself keeps a small
+     inset so no words sit under the notch. */
+  html,body,.modal-overlay,#pageContentModal,.page-modal-box,
+  .page-modal-content,#pageModalBody{background:#f7f3e3 !important;}
+  #pageContentModal{padding:0 !important;}
+  .page-modal-box{
+    padding-left:env(safe-area-inset-left, 0px) !important;
+    padding-right:env(safe-area-inset-right, 0px) !important;
+    box-sizing:border-box !important;
+  }
   /* Full width for the text, and no fixed line height -- the lines are free to
      grow taller as the font grows, which is the trade you asked for. The words
      stay justified edge to edge, so the first and last word of every line sit
