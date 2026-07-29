@@ -2284,9 +2284,18 @@ function drawAyahHover(wrap){ drawHighlightStrips(wrap, '.mushaf-word.ayah-hover
 window.drawAyahHover = drawAyahHover;
 
 // Recompute strip positions when the layout changes.
+// Debounced: undebounced, this ran on every single resize tick, which on
+// Android WebView means several times per rotation (see the fitMushaf
+// resize handler for the same issue). fitMushaf() already redraws the strips
+// itself after refitting on mobile, so this listener mainly matters on
+// desktop, where fitMushaf() is a no-op.
+let _hlResizeTid=null;
 window.addEventListener('resize', ()=>{
-  const wrap=document.querySelector('.mushaf-page-wrap');
-  if(wrap){ drawAyahHighlight(wrap); drawAyahHover(wrap); }
+  clearTimeout(_hlResizeTid);
+  _hlResizeTid=setTimeout(()=>{
+    const wrap=document.querySelector('.mushaf-page-wrap');
+    if(wrap){ drawAyahHighlight(wrap); drawAyahHover(wrap); }
+  }, 120);
 });
 
 // Ayah-level hover: hovering any word highlights the whole ayah it belongs to,
@@ -4988,7 +4997,20 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   if(document.fonts && document.fonts.ready){
     document.fonts.ready.then(function(){ setTimeout(fitMushafSettled, 60); });
   }
-  window.addEventListener('resize', function(){ setTimeout(fitMushafSettled, 120); });
+  /* Debounced, and a single fitMushaf() pass rather than fitMushafSettled's
+     extra +200/+900ms follow-ups: those exist to recover from a webfont
+     substitution race at load time, which doesn't apply to a resize/rotation
+     (the font is already loaded by then). Without the clearTimeout guard,
+     each resize event fired during a rotation queued its own independent
+     3-pass cascade -- Android WebView fires several resize events per
+     rotation (iOS Safari fires one), so on the A21S that stacked into many
+     overlapping full-page reflow measurements and read as a visible delay;
+     on iPhone's faster CPU the redundant passes were just imperceptibly fast. */
+  var _fitResizeTid = null;
+  window.addEventListener('resize', function(){
+    clearTimeout(_fitResizeTid);
+    _fitResizeTid = setTimeout(fitMushaf, 120);
+  });
 
   /* ── Draggable "ruler": resize Quran vs translation on phones ── */
   var splitter = document.getElementById('mushafSplitter');
