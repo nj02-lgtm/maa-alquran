@@ -5595,7 +5595,10 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     padding:0 !important;min-height:0 !important;
     overflow-y:auto !important;-webkit-overflow-scrolling:touch !important;
   }
-  /* Page fills the full width of the phone. */
+  /* Page fills the full width of the phone, minus the reserved icon gutter
+     on the right (see .page-modal-box below) -- the auto-fit engine measures
+     the actual available width at runtime, so reserving space here is enough
+     to make it fit text to the narrower column, nothing else to adjust. */
   .mushaf-page-wrap{width:100% !important;max-width:none !important;margin:0 !important;}
   .mushaf-border-frame{border-width:10px 12px !important;width:100% !important;}
   .mushaf-text-area{padding:3px !important;}
@@ -5609,9 +5612,17 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   html,body,.modal-overlay,#pageContentModal,.page-modal-box,
   .page-modal-content,#pageModalBody{background:#f7f3e3 !important;}
   #pageContentModal{padding:0 !important;}
+  /* --ls-icon-gutter reserves a dedicated column outside the page's golden
+     border for the Play/Practice icons (below), on top of whatever safe-area
+     inset the device has. Icons floating over the page (the previous
+     approach) covered text on both phones -- this shrinks the page itself
+     via padding instead, so the reserved column is real empty space, not an
+     overlay, on every device (the A21S has no notch/safe-area-inset of its
+     own, so without this gutter it had no margin at all). */
   .page-modal-box{
+    --ls-icon-gutter:46px;
     padding-left:env(safe-area-inset-left, 0px) !important;
-    padding-right:env(safe-area-inset-right, 0px) !important;
+    padding-right:calc(env(safe-area-inset-right, 0px) + var(--ls-icon-gutter)) !important;
     box-sizing:border-box !important;
   }
   /* Full width for the text, and no fixed line height -- the lines are free to
@@ -5627,21 +5638,23 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
      <=700px band, which landscape does not match). */
   .mushaf-page-wrap .mushaf-word{font-size:var(--mushaf-fs,30px) !important;}
 
-  /* Play and Word-practice float over the page on the right edge instead of
-     living in .page-modal-audio (hidden above) -- fixed position, so they
-     never take width away from the reading area. Unconditional on landscape
-     (not gated on .focus-mode): the audio/practice row above is already
-     hidden in ALL landscape, focus-mode or not, so the icons need to appear
-     any time the phone is rotated while reading a page, not only after the
-     separate "Full view" toggle is tapped -- otherwise a plain rotation
-     (which already looks like a stripped-down full-screen view) shows no
-     way to play or mark words at all.
-     env(safe-area-inset-right) keeps them clear of the notch/camera-housing
-     side on the iPhone, same reasoning as the .page-modal-box padding above. */
+  /* Play and Word-practice sit in the --ls-icon-gutter column reserved on
+     .page-modal-box above, just outside the page's golden border -- not
+     floating over the text. Unconditional on landscape (not gated on
+     .focus-mode): the audio/practice row above is already hidden in ALL
+     landscape, focus-mode or not, so the icons need to appear any time the
+     phone is rotated while reading a page, not only after the separate
+     "Full view" toggle is tapped -- otherwise a plain rotation (which
+     already looks like a stripped-down full-screen view) shows no way to
+     play or mark words at all.
+     right is env(safe-area-inset-right) + 4px, i.e. 4px in from the gutter's
+     outer edge, leaving another ~4px clear on the inner (page-facing) side
+     of the 46px gutter -- so the button sits centered in the reserved
+     column instead of touching either edge. */
   #pageContentModal.open .landscape-side-btn{
     display:flex !important;
     position:fixed;z-index:1095;
-    right:calc(8px + env(safe-area-inset-right,0px));
+    right:calc(env(safe-area-inset-right,0px) + 4px);
     width:38px;height:38px;border-radius:50%;
     align-items:center;justify-content:center;
     border:none;cursor:pointer;padding:0;
