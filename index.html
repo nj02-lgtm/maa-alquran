@@ -4697,8 +4697,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       if(_wrap) _wrap.style.removeProperty('padding-bottom');
     }
     var body = document.getElementById('pageModalBody');
+    /* Portrait: lock scrolling -- the page is sized to fit the screen exactly.
+       Landscape: there is not enough height to fit 15 lines without crushing
+       them, so the page keeps its natural size and this panel scrolls instead.
+       (An inline overflow:hidden here would override the landscape CSS.) */
+    var _landscape = false;
+    try{ _landscape = window.matchMedia('(orientation:landscape)').matches
+                      && window.innerWidth <= 900; }catch(e){}
     if(body){
-      if(on){ body.style.overflow = 'hidden'; }
+      if(on){ body.style.overflow = _landscape ? 'auto' : 'hidden'; }
       else  { body.style.overflow = ''; }
     }
     /* Freeze the whole document while in focus mode: on some mobile browsers
@@ -5393,6 +5400,69 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   border-left-width:3px !important;}
 .step-arrow-css::before{width:3px !important;height:10px !important;right:-3px !important;}
 .step-arrow-css::after{transform:scale(2) !important;transform-origin:50% 100% !important;}
+
+/* ── Full view in LANDSCAPE on phones ────────────────────────────────────
+   Landscape leaves very little height (roughly 360px on an A21S), and full
+   view was still forcing all 15 lines to share it -- so the lines collapsed
+   into each other and the words overlapped.
+   In landscape the page therefore keeps its natural size and the panel
+   scrolls instead, with the controls still hidden. Portrait is unchanged:
+   there the page fits the screen and does not scroll. */
+@media (max-width:900px) and (orientation:landscape){
+  #pageContentModal.focus-mode #pageModalBody{
+    overflow-y:auto !important;-webkit-overflow-scrolling:touch !important;
+    overscroll-behavior:contain !important;
+  }
+  #pageContentModal.focus-mode .mushaf-page-wrap,
+  #pageContentModal.focus-mode .mushaf-border-frame,
+  #pageContentModal.focus-mode .mushaf-text-area{
+    flex:0 0 auto !important;height:auto !important;min-height:0 !important;
+  }
+  /* Give every line its natural height back so glyphs cannot overlap. */
+  #pageContentModal.focus-mode .mushaf-page-wrap .mushaf-line{
+    flex:0 0 auto !important;min-height:46px !important;
+  }
+  #pageContentModal.focus-mode .page-modal-box{height:auto !important;min-height:100% !important;}
+}
+
+/* ── Landscape controls: buttons stacked at the side ──────────────────────
+   Landscape is short but wide, so a horizontal button row costs scarce height
+   while leaving width unused. The four action buttons move into a vertical
+   strip pinned to the left edge, and only the reciter name stays along the
+   bottom -- the tafsir panel and its ruler are untouched. That hands the whole
+   remaining height back to the Qur'an page. */
+@media (max-width:900px) and (orientation:landscape){
+  .page-modal-audio{
+    padding:0 !important;background:transparent !important;border-top:none !important;
+  }
+  /* The button strip. */
+  .page-modal-audio .pma-row1{
+    position:fixed !important;left:2px !important;top:50% !important;
+    transform:translateY(-50%) !important;
+    flex-direction:column !important;flex-wrap:nowrap !important;
+    width:auto !important;gap:4px !important;z-index:1095 !important;
+    align-items:stretch !important;
+  }
+  .page-modal-audio #playPageBtn,
+  .page-modal-audio #wordPracticeBtn,
+  .page-modal-audio #repeatModeBtn,
+  .page-modal-audio #fullViewBtn{
+    flex:0 0 auto !important;width:62px !important;min-width:0 !important;
+    height:auto !important;padding:4px 2px !important;font-size:8.5px !important;
+    line-height:1.15 !important;white-space:normal !important;
+  }
+  /* Reciter name: its own strip along the bottom. */
+  .page-modal-audio .pma-row1 #reciterSelect{
+    position:fixed !important;left:4px !important;right:4px !important;
+    bottom:2px !important;top:auto !important;
+    width:auto !important;flex:0 0 auto !important;margin:0 !important;
+    font-size:10px !important;padding:3px 8px !important;z-index:1095 !important;
+  }
+  .page-modal-audio .audio-label{display:none !important;}
+  /* Keep the page clear of the button strip and the reciter strip. */
+  #pageModalBody{padding-left:68px !important;padding-bottom:26px !important;}
+  .tafsir-panel{padding-left:68px !important;}
+}
 
 @keyframes mobFlash{
   0%,100%{box-shadow:0 0 0 0 rgba(212,160,23,0);}
