@@ -4530,7 +4530,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     /* Landscape phones report ~800px wide but are still phones, and the page
        needs the same auto-fit there -- without it the font is fixed and lines
        can overflow with no squeeze safety net. */
-    try{ return window.innerWidth <= 900
+    try{ return window.innerWidth <= 1024
               && window.matchMedia('(orientation:landscape)').matches; }
     catch(e){ return false; }
   };
@@ -4548,7 +4548,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
        a much larger font -- which also closes up the wide word spacing that
        appears when a line is stretched across a wide screen at a small size. */
     var _land = false;
-    try{ _land = window.innerWidth > 700
+    try{ _land = window.innerWidth > 700 && window.innerWidth <= 1024
                  && window.matchMedia('(orientation:landscape)').matches; }catch(e){}
     var BASE  = _land ? ((pg === '1' || pg === '2') ? 34 : 30)
                       : ((pg === '1' || pg === '2') ? 23 : 20);
@@ -5423,7 +5423,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
    In landscape the page therefore keeps its natural size and the panel
    scrolls instead, with the controls still hidden. Portrait is unchanged:
    there the page fits the screen and does not scroll. */
-@media (max-width:900px) and (orientation:landscape){
+@media (max-width:1024px) and (orientation:landscape){
   #pageContentModal.focus-mode #pageModalBody{
     overflow-y:auto !important;-webkit-overflow-scrolling:touch !important;
     overscroll-behavior:contain !important;
@@ -5446,7 +5446,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
    width and height of the phone, and the auto-fit (enabled for landscape in
    the script) sizes the text up to suit -- which also closes the wide word
    spacing that appears when a small font is stretched across a wide screen. */
-@media (max-width:900px) and (orientation:landscape){
+@media (max-width:1024px) and (orientation:landscape){
   .page-modal-audio,
   .tafsir-panel,
   .mushaf-splitter,
