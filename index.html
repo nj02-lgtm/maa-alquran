@@ -5160,6 +5160,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
       au.addEventListener(evt, function(){ setTimeout(syncPlay, 20); });
     });
   }
+  /* Belt-and-braces poll, on top of the events above: on the A21S the events
+     alone were enough to flip the icon, but on iPhone (Safari and Chrome)
+     they were not reliable enough to update it -- #pageAudioPlayer sits
+     inside .page-modal-audio, which is display:none in landscape, and
+     WebKit is known to be inconsistent about firing media events on a
+     display:none element (Chromium/the A21S's WebView is not). A cheap
+     400ms poll of the actual .paused/.currentTime state sidesteps needing
+     the events to fire at all, so the icon updates on every engine. */
+  setInterval(syncPlay, 400);
   /* #wordPracticeBtn/#playPageBtn live in .page-modal-audio, a sibling of
      #pageModalBody -- not inside the subtree the page-render observer
      watches, so mirroring their state this way cannot re-trigger that
