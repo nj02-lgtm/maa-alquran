@@ -408,6 +408,25 @@ body.dark .goal-note{background:#1c2a38;border-color:#33485d;color:#aebfd0}
     .mushaf-close-btn{position:fixed;top:14px;left:18px;z-index:1100;background:rgba(31,79,123,.85);border:none;color:white;width:38px;height:38px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3);}
     .mushaf-close-btn:hover{background:rgba(22,53,82,.95);}
 
+    /* Full view is a mobile feature (it exists to hide the controls/tafsir
+       panel that eat ~40% of a phone screen) -- on desktop there's no such
+       space problem, and #fullViewBtn's own click handler has no mobile
+       gate, so it was reachable there too. That exposed a real bug: the
+       .focus-restore-btn "exit full view" button is only ever styled inside
+       the <=700px band (position:fixed, size, etc.); at desktop widths it
+       fell back to being a plain flex child of #pageContentModal, which sets
+       align-items:stretch -- so an unstyled button stretched to the full
+       modal height, appearing as a tall strip beside the page (to its left,
+       since the layout is RTL) with its restore-icon's two nested squares
+       inside it, plus the always-fixed ✕ nearby reading as one cluster.
+       Removing the Full button on desktop removes the only way to trigger
+       it there; hiding .focus-restore-btn too is a defensive belt-and-braces
+       in case focus-mode is ever entered some other way. */
+    @media(min-width:1025px){
+      #fullViewBtn,
+      #pageContentModal .focus-restore-btn{display:none !important;}
+    }
+
     /* ── Outer page modal box ── */
     .page-modal-box{
       width:100%;max-width:100%;max-height:100vh;
