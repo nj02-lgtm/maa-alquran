@@ -4525,7 +4525,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
 
 <script>
 (function(){
-  var MOBILE = function(){ return window.innerWidth <= 700; };
+  var MOBILE = function(){
+    if(window.innerWidth <= 700) return true;
+    /* Landscape phones report ~800px wide but are still phones, and the page
+       needs the same auto-fit there -- without it the font is fixed and lines
+       can overflow with no squeeze safety net. */
+    try{ return window.innerWidth <= 900
+              && window.matchMedia('(orientation:landscape)').matches; }
+    catch(e){ return false; }
+  };
 
   /* ── Mushaf auto-fit: shrink word size until every line fits on one row ── */
   function fitMushaf(){
@@ -4536,8 +4544,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var lines = wrap.querySelectorAll('.mushaf-line');
     if(!lines.length) return;
 
-    var BASE  = (pg === '1' || pg === '2') ? 23 : 20;
-    var FLOOR = (pg === '1' || pg === '2') ? 14 : 15;
+    /* Landscape has roughly twice the width of portrait, so the page can carry
+       a much larger font -- which also closes up the wide word spacing that
+       appears when a line is stretched across a wide screen at a small size. */
+    var _land = false;
+    try{ _land = window.innerWidth > 700
+                 && window.matchMedia('(orientation:landscape)').matches; }catch(e){}
+    var BASE  = _land ? ((pg === '1' || pg === '2') ? 34 : 30)
+                      : ((pg === '1' || pg === '2') ? 23 : 20);
+    var FLOOR = _land ? 18 : ((pg === '1' || pg === '2') ? 14 : 15);
     var i, w;
 
     /* Reset any sizing/squeeze left from a previous run. */
@@ -5425,43 +5440,34 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
   #pageContentModal.focus-mode .page-modal-box{height:auto !important;min-height:100% !important;}
 }
 
-/* ── Landscape controls: buttons stacked at the side ──────────────────────
-   Landscape is short but wide, so a horizontal button row costs scarce height
-   while leaving width unused. The four action buttons move into a vertical
-   strip pinned to the left edge, and only the reciter name stays along the
-   bottom -- the tafsir panel and its ruler are untouched. That hands the whole
-   remaining height back to the Qur'an page. */
+/* ── Landscape on phones: pure reading ───────────────────────────────────
+   Landscape is for reading, so everything else goes: buttons, reciter, tafsir
+   panel, the splitter and the full-view control. The page then takes the whole
+   width and height of the phone, and the auto-fit (enabled for landscape in
+   the script) sizes the text up to suit -- which also closes the wide word
+   spacing that appears when a small font is stretched across a wide screen. */
 @media (max-width:900px) and (orientation:landscape){
-  .page-modal-audio{
-    padding:0 !important;background:transparent !important;border-top:none !important;
+  .page-modal-audio,
+  .tafsir-panel,
+  .mushaf-splitter,
+  #fullViewBtn,
+  .focus-restore-btn,
+  .page-bottom-nav{display:none !important;}
+
+  .page-modal-content{height:100% !important;}
+  #pageModalBody{
+    height:100% !important;flex:1 1 auto !important;
+    padding:0 !important;min-height:0 !important;
+    overflow-y:auto !important;-webkit-overflow-scrolling:touch !important;
   }
-  /* The button strip. */
-  .page-modal-audio .pma-row1{
-    position:fixed !important;left:2px !important;top:50% !important;
-    transform:translateY(-50%) !important;
-    flex-direction:column !important;flex-wrap:nowrap !important;
-    width:auto !important;gap:4px !important;z-index:1095 !important;
-    align-items:stretch !important;
-  }
-  .page-modal-audio #playPageBtn,
-  .page-modal-audio #wordPracticeBtn,
-  .page-modal-audio #repeatModeBtn,
-  .page-modal-audio #fullViewBtn{
-    flex:0 0 auto !important;width:62px !important;min-width:0 !important;
-    height:auto !important;padding:4px 2px !important;font-size:8.5px !important;
-    line-height:1.15 !important;white-space:normal !important;
-  }
-  /* Reciter name: its own strip along the bottom. */
-  .page-modal-audio .pma-row1 #reciterSelect{
-    position:fixed !important;left:4px !important;right:4px !important;
-    bottom:2px !important;top:auto !important;
-    width:auto !important;flex:0 0 auto !important;margin:0 !important;
-    font-size:10px !important;padding:3px 8px !important;z-index:1095 !important;
-  }
-  .page-modal-audio .audio-label{display:none !important;}
-  /* Keep the page clear of the button strip and the reciter strip. */
-  #pageModalBody{padding-left:68px !important;padding-bottom:26px !important;}
-  .tafsir-panel{padding-left:68px !important;}
+  /* Page fills the full width of the phone. */
+  .mushaf-page-wrap{width:100% !important;max-width:none !important;margin:0 !important;}
+  .mushaf-border-frame{border-width:10px 12px !important;width:100% !important;}
+  .mushaf-text-area{padding:3px !important;}
+  .mushaf-line{width:99% !important;padding:1px 2px !important;}
+  /* Apply the fitted size in landscape as well (the var rule lives in the
+     <=700px band, which landscape does not match). */
+  .mushaf-page-wrap .mushaf-word{font-size:var(--mushaf-fs,30px) !important;}
 }
 
 @keyframes mobFlash{
