@@ -425,6 +425,12 @@ body.dark .goal-note{background:#1c2a38;border-color:#33485d;color:#aebfd0}
     @media(min-width:1025px){
       #fullViewBtn,
       #pageContentModal .focus-restore-btn{display:none !important;}
+      /* Dashboard: the "Select Juz / Level / Apply to all" bar, removed from
+         laptop view only. Juz selection and level changes stay reachable
+         via the grid-based panels below (Choose a Juz -> Choose a page), so
+         this doesn't remove the underlying feature, just this bar. Mobile
+         already hides the same element (pointer:coarse, further down). */
+      .juz-selector-area{display:none !important;}
     }
 
     /* ── Outer page modal box ── */
