@@ -5629,12 +5629,16 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
 
   /* Play and Word-practice float over the page on the right edge instead of
      living in .page-modal-audio (hidden above) -- fixed position, so they
-     never take width away from the reading area. Only shown in full view:
-     outside full view, landscape still has the normal (non-scrolling)
-     reading layout with its own controls reachable by rotating back.
+     never take width away from the reading area. Unconditional on landscape
+     (not gated on .focus-mode): the audio/practice row above is already
+     hidden in ALL landscape, focus-mode or not, so the icons need to appear
+     any time the phone is rotated while reading a page, not only after the
+     separate "Full view" toggle is tapped -- otherwise a plain rotation
+     (which already looks like a stripped-down full-screen view) shows no
+     way to play or mark words at all.
      env(safe-area-inset-right) keeps them clear of the notch/camera-housing
      side on the iPhone, same reasoning as the .page-modal-box padding above. */
-  #pageContentModal.focus-mode .landscape-side-btn{
+  #pageContentModal.open .landscape-side-btn{
     display:flex !important;
     position:fixed;z-index:1095;
     right:calc(8px + env(safe-area-inset-right,0px));
@@ -5645,15 +5649,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     box-shadow:0 2px 10px rgba(0,0,0,.3);
     opacity:.72;transition:opacity .15s,background-color .15s;
   }
-  #pageContentModal.focus-mode .landscape-side-btn:active{opacity:1;}
-  #pageContentModal.focus-mode #landscapePlayBtn{
+  #pageContentModal.open .landscape-side-btn:active{opacity:1;}
+  #pageContentModal.open #landscapePlayBtn{
     top:calc(50% - 46px);background:#2f7d4f;
   }
-  #pageContentModal.focus-mode #landscapePlayBtn.playing{background:#9b2c2c;}
-  #pageContentModal.focus-mode #landscapePracticeBtn{
+  #pageContentModal.open #landscapePlayBtn.playing{background:#9b2c2c;}
+  #pageContentModal.open #landscapePracticeBtn{
     top:calc(50% + 8px);background:#b07a00;
   }
-  #pageContentModal.focus-mode #landscapePracticeBtn.on{background:#9b2c2c;}
+  #pageContentModal.open #landscapePracticeBtn.on{background:#9b2c2c;}
 }
 
 @keyframes mobFlash{
