@@ -2078,20 +2078,10 @@ body.dark .tafsir-selector-row label {
     }catch(e){}
   }
 
-  /* TEMPORARY DIAGNOSTIC (remove once the iPhone issue is confirmed fixed):
-     visible toasts, no dev tools needed, to see exactly where this breaks --
-     whether the guard is even pushed on load, and whether Back reaches our
-     popstate handler at all. */
-  function pushGuardDebug(){
-    pushGuard();
-    setTimeout(function(){ if(typeof showToast==='function') showToast('🛡️ DEBUG: exit guard armed (history.length=' + history.length + ')', 3000); }, 50);
-  }
-
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pushGuardDebug);
-  else pushGuardDebug();
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pushGuard);
+  else pushGuard();
 
   window.addEventListener('popstate', function(){
-    if(typeof showToast==='function') showToast('⬅️ DEBUG: popstate fired (history.length=' + history.length + ')', 3000);
     var open = topmostOpen();
     if(open){
       closeTopmost(open);
