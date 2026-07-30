@@ -2060,7 +2060,23 @@ body.dark .tafsir-selector-row label {
     }
   }
 
-  function pushGuard(){ try{ history.pushState({quranExitGuard:true}, '', location.href); }catch(e){} }
+  /* Found it: pushGuard() was pushing a state with the SAME URL as the
+     current page (location.href). The "guard armed" toast confirmed
+     pushState() itself succeeds on iPhone -- but Back still exited with no
+     popstate toast at all, meaning WebKit's back gesture was skipping past
+     our guard entry entirely rather than stopping on it. WebKit is known to
+     collapse/step over consecutive history entries that share an identical
+     URL, treating "back to the exact same address" as a no-op stop to skip
+     -- Chrome/Blink (the laptop, and presumably Android) doesn't do this,
+     which is why it worked there. Giving the guard entry a distinct URL (a
+     harmless hash fragment the app doesn't otherwise use) makes it a real,
+     distinguishable history stop on every engine. */
+  function pushGuard(){
+    try{
+      var base = location.href.split('#')[0];
+      history.pushState({quranExitGuard:true}, '', base + '#app');
+    }catch(e){}
+  }
 
   /* TEMPORARY DIAGNOSTIC (remove once the iPhone issue is confirmed fixed):
      visible toasts, no dev tools needed, to see exactly where this breaks --
