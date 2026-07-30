@@ -393,6 +393,12 @@ body.dark .goal-note{background:#1c2a38;border-color:#33485d;color:#aebfd0}
     .summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px;}
     .summary-card{background:#fdfaf4;border:1px solid #e5d7b8;border-radius:10px;padding:8px 2px;text-align:center;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:all .1s;font-size:10px;font-weight:600;min-height:58px;}
     .summary-card .sc-num{font-size:15px;font-weight:700;line-height:1;}
+    /* Reserved-height row for the dots / "0/N" placeholder -- see the
+       renderCompactSummary() comment for why both branches share this class
+       and a fixed min-height (keeps the Juz number's vertical position the
+       same whether or not the card has any progress dots). */
+    .summary-card .sc-status-row{min-height:10px;margin-top:2px;display:flex;align-items:center;justify-content:center;gap:3px;font-size:9px;opacity:.6;}
+    .summary-card .sc-dot{width:6px;height:6px;border-radius:50%;display:inline-block;}
     .summary-card:hover,.summary-card.active{background:#f5ecda;border-color:#d4a017;transform:translateY(-1px);}
     .summary-card.has-strong{border-bottom:3px solid #4caf7d;}
     .summary-card.has-light{border-bottom:3px solid #e0b94a;}
@@ -3233,9 +3239,17 @@ window.navigateModal = function(delta) {
       const card=document.createElement('div');
       card.className=`summary-card ${strong>0?'has-strong':(light>0?'has-light':'')} ${j===currentJuz?'active':''}`;
       card.setAttribute('role','button');
+      /* .sc-status-row is used for BOTH branches below (dots, or the "0/N"
+         placeholder) with the same reserved min-height, so a card's total
+         content height -- and therefore where justify-content:center lands
+         the number above it -- stays identical whether or not it has any
+         dots. Previously the placeholder was display:none on mobile while
+         the dots row wasn't, so cards with progress had one more row of
+         real height than blank ones and got vertically re-centered, which
+         is what visibly pushed their Juz number upward. */
       let badges='';
-      if(strong>0||light>0){badges=`<div style="display:flex;gap:3px;margin-top:2px;justify-content:center;">`;if(strong>0)badges+=`<span style="background:#4caf7d;width:6px;height:6px;border-radius:50%;display:inline-block;"></span>`;if(light>0)badges+=`<span style="background:#e0b94a;width:6px;height:6px;border-radius:50%;display:inline-block;"></span>`;badges+=`</div>`;}
-      else badges=`<div class="sc-zero" style="font-size:9px;opacity:.6;margin-top:2px;">0/${info.pages.length}</div>`;
+      if(strong>0||light>0){badges=`<div class="sc-status-row">`;if(strong>0)badges+=`<span class="sc-dot" style="background:#4caf7d;"></span>`;if(light>0)badges+=`<span class="sc-dot" style="background:#e0b94a;"></span>`;badges+=`</div>`;}
+      else badges=`<div class="sc-status-row sc-zero">0/${info.pages.length}</div>`;
       const _ws=weakStore();const juzWeak=info.pages.some(pg=>(_ws[pg]||[]).length>0);
       const juzStrip=juzWeak?`<span class="weak-strip" title="يحتوي كلمات تحتاج تدريباً / Has words to practice"></span>`:'';
       card.innerHTML=`${juzStrip}<div class="sc-num" style="margin-bottom:1px;">${j}</div><div class="surah-name">جزء / Juz</div>${badges}`;
@@ -5996,9 +6010,15 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
    regardless of how wide their viewport reports (some phones report ~720px
    portrait and ~1600px landscape, so width alone is not a reliable signal).
    Desktop keeps the badge. Once a Juz has memorized pages the coloured dots
-   replace this badge anyway. */
+   replace this badge anyway.
+   visibility:hidden, NOT display:none: the placeholder still needs to
+   occupy its reserved .sc-status-row height (see that class) so a card
+   with no progress takes up exactly as much vertical space as one with
+   dots -- display:none previously collapsed that row to zero height only
+   on mobile, which re-centered the shorter card's content and visibly
+   pushed its Juz number up relative to cards that had dots. */
 @media (pointer:coarse){
-  .summary-card .sc-zero{display:none !important;}
+  .summary-card .sc-zero{visibility:hidden;}
   /* Task 3: hide the "Select Juz / Level / Apply to all" row on mobile.
      pointer:coarse targets touch devices in both orientations, so it also
      covers landscape (800px) which sits outside the <=700px band. Desktop,
