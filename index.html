@@ -1471,6 +1471,20 @@ body.dark .tafsir-selector-row label {
   </div>
 </div>
 
+<div class="settings-section">
+  <div class="settings-section-title">🚪 الخروج / Exiting</div>
+  <div class="settings-row">
+    <div class="settings-row-info">
+      <div class="settings-row-label">تأكيد قبل الخروج / Confirm before exiting</div>
+      <div class="settings-row-sub">يسأل قبل إغلاق التطبيق بزر الرجوع</div>
+    </div>
+    <label class="theme-switch">
+      <input type="checkbox" id="sExitConfirmToggle" checked>
+      <span class="slider round"></span>
+    </label>
+  </div>
+</div>
+
       <div class="settings-section">
         <div class="settings-section-title">🎧 التلاوة / Recitation</div>
         <div class="settings-row">
@@ -1537,6 +1551,20 @@ body.dark .tafsir-selector-row label {
 
       <div class="settings-section">
         <div class="settings-section-title">❓ المساعدة والمزيد / Help &amp; More</div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">قيّم التطبيق / Rate the App</div>
+            <div class="settings-row-sub">شاركنا رأيك على متجر Google Play</div>
+          </div>
+          <button class="s-btn s-btn-primary" id="sRateBtn">⭐ قيّم / Rate</button>
+        </div>
+        <div class="settings-row">
+          <div class="settings-row-info">
+            <div class="settings-row-label">جولة تعريفية / App Walkthrough</div>
+            <div class="settings-row-sub">جولة سريعة لأهم المزايا</div>
+          </div>
+          <button class="s-btn" id="sTourBtn">🧭 ابدأ / Start</button>
+        </div>
         <div class="settings-row">
           <div class="settings-row-info">
             <div class="settings-row-label">دليل الاستخدام والمعلومات / Help &amp; About</div>
@@ -1755,6 +1783,250 @@ body.dark .tafsir-selector-row label {
   </main>
 </div>
 <div id="toast"></div>
+
+<!-- ════════ Dynamic walkthrough for new users (tester feedback #1) ════════
+     A short spotlight tour: #tourHole is positioned over each target element
+     and its huge box-shadow dims the rest of the screen (a single-element
+     "spotlight cutout" trick -- no canvas/SVG masking needed, so it works
+     the same on the A21S's old WebView as on Safari/Chrome). #tourOverlay is
+     the actual click-blocker (the box-shadow is paint only, not interactive)
+     so the dashboard underneath can't be poked mid-tour. -->
+<style>
+  #tourOverlay{display:none;position:fixed;inset:0;z-index:5000;background:transparent;}
+  #tourHole{display:none;position:fixed;z-index:5001;border-radius:10px;pointer-events:none;
+    box-shadow:0 0 0 9999px rgba(15,23,42,.72);
+    transition:left .25s ease,top .25s ease,width .25s ease,height .25s ease;}
+  .tour-tooltip{display:none;position:fixed;z-index:5002;width:min(340px,88vw);
+    background:#fdfaf4;color:#1f2933;border-radius:14px;padding:16px 18px;
+    box-shadow:0 10px 40px rgba(0,0,0,.4);font-family:system-ui,sans-serif;
+    transition:left .25s ease,top .25s ease;}
+  body.dark .tour-tooltip{background:#1e293b;color:#e2e8f0;}
+  .tour-tt-counter{font-size:11px;opacity:.6;font-weight:700;margin-bottom:3px;}
+  .tour-tt-title{font-size:15px;font-weight:700;margin-bottom:6px;}
+  .tour-tt-body{font-size:13px;line-height:1.65;margin-bottom:14px;}
+  .tour-tt-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .tour-skip{background:none;border:none;color:#7a6a4a;font-size:12px;cursor:pointer;padding:6px 2px;text-decoration:underline;}
+  body.dark .tour-skip{color:#94a3b8;}
+  .tour-tt-nav{display:flex;gap:8px;}
+  .tour-nav-btn{border:1px solid #d9c99a;background:#fff;color:#1f2933;border-radius:8px;
+    padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;}
+  .tour-nav-btn.tour-nav-primary{background:#1f4f7b;color:#fff;border-color:#1f4f7b;}
+  body.dark .tour-nav-btn{background:#0f172a;color:#e2e8f0;border-color:#334155;}
+  body.dark .tour-nav-btn.tour-nav-primary{background:#2563eb;border-color:#2563eb;}
+</style>
+<div id="tourOverlay"></div>
+<div id="tourHole"></div>
+<div class="tour-tooltip" id="tourTooltip">
+  <div class="tour-tt-counter" id="tourCounter"></div>
+  <div class="tour-tt-title" id="tourTitle"></div>
+  <div class="tour-tt-body" id="tourBody"></div>
+  <div class="tour-tt-actions">
+    <button type="button" class="tour-skip" id="tourSkipBtn">تخطي / Skip</button>
+    <div class="tour-tt-nav">
+      <button type="button" class="tour-nav-btn" id="tourPrevBtn">السابق / Back</button>
+      <button type="button" class="tour-nav-btn tour-nav-primary" id="tourNextBtn">التالي / Next</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  /* Each target is a function (not a static selector) so it can resolve to
+     different real elements depending on viewport -- e.g. step 4 points at
+     the mobile hamburger on phones but the sidebar's Settings item on
+     desktop, since only one of those two actually exists on screen at a
+     time (the other is display:none). Panels are found via their stable
+     child id + closest('.panel') instead of nth-child, because
+     .layout-row's CSS reorders the two panels (order:1/2), which would
+     silently point nth-child selectors at the wrong one. */
+  var STEPS = [
+    { title:'السلام عليكم 👋 / Welcome',
+      body:'هذه جولة سريعة لأهم مزايا التطبيق. اضغط «التالي» للمتابعة، أو «تخطي» لإنهائها في أي وقت -- ويمكنك دائماً إعادتها لاحقاً من الإعدادات.<br><span style="opacity:.75">A quick tour of the app\'s main features. Tap Next to continue, or Skip to end anytime -- you can always replay it later from Settings.</span>',
+      target:null },
+    { title:'١) اختر الجزء / Choose a Juz',
+      body:'اضغط على أي جزء هنا لعرض صفحاته أدناه ومتابعة حفظك.<br><span style="opacity:.75">Tap a Juz here to show its pages below and track your memorization.</span>',
+      target:function(){ var el=document.getElementById('compactSummaryList'); return el && el.closest('.panel'); } },
+    { title:'٢) اختر صفحة / Choose a page',
+      body:'اضغط 📖 على أي صفحة لفتحها للقراءة والاستماع، أو اضغط على الصفحة نفسها لتغيير مستوى حفظها (أبيض ← أصفر ← أخضر).<br><span style="opacity:.75">Tap 📖 on a page to open it for reading/listening, or tap the page itself to cycle its memorization level (white → yellow → green).</span>',
+      target:function(){ var el=document.getElementById('dynamicPageGrid'); return el && el.closest('.panel'); } },
+    { title:'٣) القائمة / Menu',
+      body:'من هنا تصل إلى الإعدادات (القارئ والتفسير الافتراضي)، التنزيل دون اتصال، وإعادة هذه الجولة في أي وقت.<br><span style="opacity:.75">From here you can reach Settings (default reciter/tafsir), Offline Downloads, and replay this tour anytime.</span>',
+      target:function(){
+        var mob = document.getElementById('mobMenuBtn');
+        if(mob && mob.offsetParent) return mob;
+        return document.querySelector('.sidebar .nav-item[data-nav="settings"]');
+      } },
+    { title:'هذا كل شيء! / All set!',
+      body:'يمكنك إعادة هذه الجولة لاحقاً من الإعدادات ← المساعدة والمزيد.<br><span style="opacity:.75">You can replay this tour anytime from Settings → Help &amp; More.</span>',
+      target:null }
+  ];
+
+  var idx = 0;
+
+  function els(){
+    return {
+      overlay: document.getElementById('tourOverlay'),
+      hole: document.getElementById('tourHole'),
+      tip: document.getElementById('tourTooltip'),
+      title: document.getElementById('tourTitle'),
+      body: document.getElementById('tourBody'),
+      counter: document.getElementById('tourCounter'),
+      prev: document.getElementById('tourPrevBtn'),
+      next: document.getElementById('tourNextBtn')
+    };
+  }
+
+  function positionTooltip(r){
+    var e = els();
+    var tw = e.tip.offsetWidth || 320, th = e.tip.offsetHeight || 160;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var top, left;
+    if(!r){
+      top = (vh - th) / 2; left = (vw - tw) / 2;
+    } else {
+      var spaceBelow = vh - r.bottom;
+      if(spaceBelow > th + 24) top = r.bottom + 14;
+      else if(r.top > th + 24) top = r.top - th - 14;
+      else top = Math.max(12, (vh - th) / 2);
+      left = r.left + r.width / 2 - tw / 2;
+    }
+    left = Math.max(12, Math.min(vw - tw - 12, left));
+    top = Math.max(12, Math.min(vh - th - 12, top));
+    e.tip.style.left = left + 'px';
+    e.tip.style.top = top + 'px';
+  }
+
+  function render(){
+    var e = els();
+    var step = STEPS[idx];
+    var target = typeof step.target === 'function' ? step.target() : null;
+
+    e.title.textContent = step.title;
+    e.body.innerHTML = step.body;
+    e.counter.textContent = (idx + 1) + ' / ' + STEPS.length;
+    e.prev.style.visibility = idx === 0 ? 'hidden' : 'visible';
+    e.next.textContent = idx === STEPS.length - 1 ? 'إنهاء / Done' : 'التالي / Next';
+
+    if(target){
+      var r = target.getBoundingClientRect();
+      var pad = 6;
+      e.hole.style.display = 'block';
+      e.hole.style.left = (r.left - pad) + 'px';
+      e.hole.style.top = (r.top - pad) + 'px';
+      e.hole.style.width = (r.width + pad * 2) + 'px';
+      e.hole.style.height = (r.height + pad * 2) + 'px';
+      target.scrollIntoView({behavior:'smooth', block:'center'});
+      setTimeout(function(){
+        positionTooltip(target.getBoundingClientRect());
+      }, 260);
+    } else {
+      e.hole.style.display = 'none';
+      positionTooltip(null);
+    }
+  }
+
+  function show(){
+    idx = 0;
+    els().overlay.style.display = 'block';
+    els().tip.style.display = 'block';
+    render();
+  }
+  function hide(){
+    els().overlay.style.display = 'none';
+    els().hole.style.display = 'none';
+    els().tip.style.display = 'none';
+    try{ localStorage.setItem('quran_onboarding_done', '1'); }catch(e){}
+  }
+  function next(){ if(idx >= STEPS.length - 1){ hide(); return; } idx++; render(); }
+  function prev(){ if(idx > 0){ idx--; render(); } }
+
+  document.getElementById('tourNextBtn').addEventListener('click', next);
+  document.getElementById('tourPrevBtn').addEventListener('click', prev);
+  document.getElementById('tourSkipBtn').addEventListener('click', hide);
+  window.addEventListener('resize', function(){
+    if(els().overlay.style.display === 'block') render();
+  });
+
+  window.startWalkthrough = show;
+  window.stopWalkthrough = hide;
+
+  /* Auto-start once for new users. Skipped if a modal/panel is already open
+     (e.g. a deep link opened straight into a reading page) rather than
+     retrying -- the replay button in Settings covers that session instead. */
+  try{
+    if(!localStorage.getItem('quran_onboarding_done')){
+      setTimeout(function(){
+        var busy = document.querySelector('.modal-overlay.open, .side-panel-overlay.open');
+        if(!busy && document.getElementById('compactSummaryList')) show();
+      }, 1400);
+    }
+  }catch(e){}
+})();
+</script>
+
+<!-- ════════ Confirm before exiting on Back (tester feedback #2) ════════
+     A hardware/gesture Back press on Android (and the browser Back button
+     everywhere else) normally has nothing to pop except the app's own single
+     history entry, so it exits/navigates away immediately with no warning.
+     This pushes one extra history entry up front; popping it fires popstate
+     instead of actually leaving. If something is open (reading page, a side
+     panel, the mobile drawer, or the walkthrough above) Back closes THAT
+     first, one layer at a time, matching normal back-button expectations --
+     only Back from the bare dashboard, with nothing open, asks to exit.
+     Uses the same window.confirm() the app already uses for delete/clear/
+     import confirmations elsewhere, rather than a new custom dialog style. -->
+<script>
+(function(){
+  function topmostOpen(){
+    var tour = document.getElementById('tourOverlay');
+    if(tour && tour.style.display === 'block') return 'tour';
+    var pageModal = document.getElementById('pageContentModal');
+    if(pageModal && pageModal.classList.contains('open')) return 'pageModal';
+    var detailsModal = document.getElementById('detailsModal');
+    if(detailsModal && detailsModal.classList.contains('open')) return 'detailsModal';
+    var panel = document.querySelector('.side-panel-overlay.open');
+    if(panel) return 'panel:' + panel.id;
+    var drawer = document.querySelector('.mob-nav-drawer.open');
+    if(drawer) return 'drawer';
+    return null;
+  }
+
+  function closeTopmost(what){
+    if(what === 'tour'){ if(typeof window.stopWalkthrough === 'function') window.stopWalkthrough(); return; }
+    if(what === 'pageModal'){ if(typeof closePageModal === 'function') closePageModal(); return; }
+    if(what === 'detailsModal'){ if(typeof closeModal === 'function') closeModal(); return; }
+    if(what && what.indexOf('panel:') === 0){
+      if(typeof closePanel === 'function') closePanel(what.slice(6));
+      return;
+    }
+    if(what === 'drawer'){
+      var d = document.querySelector('.mob-nav-drawer'), o = document.getElementById('mobNavOverlay');
+      if(d) d.classList.remove('open');
+      if(o) o.classList.remove('open');
+    }
+  }
+
+  function pushGuard(){ try{ history.pushState({quranExitGuard:true}, '', location.href); }catch(e){} }
+
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pushGuard);
+  else pushGuard();
+
+  window.addEventListener('popstate', function(){
+    var open = topmostOpen();
+    if(open){
+      closeTopmost(open);
+      pushGuard();          // stay guarded: this Back closed a layer, not the app
+      return;
+    }
+    var enabled = true;
+    try{ enabled = localStorage.getItem('quran_exit_confirm') !== '0'; }catch(e){}
+    if(!enabled) return;    // user turned the confirmation off in Settings: let Back exit normally
+    var reallyExit = confirm('هل تريد الخروج من التطبيق؟ / Do you want to exit the app?');
+    if(reallyExit){ try{ history.back(); }catch(e){} }
+    else{ pushGuard(); }
+  });
+})();
+</script>
+
 <script>
 
   const surahNames={1:{ar:"الفاتحة",en:"Al-Fatihah"},2:{ar:"البقرة",en:"Al-Baqarah"},3:{ar:"آل عمران",en:"Aal-E-Imran"},4:{ar:"النساء",en:"An-Nisa'"},5:{ar:"المائدة",en:"Al-Ma'idah"},6:{ar:"الأنعام",en:"Al-An'am"},7:{ar:"الأعراف",en:"Al-A'raf"},8:{ar:"الأنفال",en:"Al-Anfal"},9:{ar:"التوبة",en:"At-Tawbah"},10:{ar:"يونس",en:"Yunus"},11:{ar:"هود",en:"Hud"},12:{ar:"يوسف",en:"Yusuf"},13:{ar:"الرعد",en:"Ar-Ra'd"},14:{ar:"إبراهيم",en:"Ibrahim"},15:{ar:"الحجر",en:"Al-Hijr"},16:{ar:"النحل",en:"An-Nahl"},17:{ar:"الإسراء",en:"Al-Isra'"},18:{ar:"الكهف",en:"Al-Kahf"},19:{ar:"مريم",en:"Maryam"},20:{ar:"طه",en:"Taha"},21:{ar:"الأنبياء",en:"Al-Anbiya'"},22:{ar:"الحج",en:"Al-Hajj"},23:{ar:"المؤمنون",en:"Al-Mu'minun"},24:{ar:"النور",en:"An-Nur"},25:{ar:"الفرقان",en:"Al-Furqan"},26:{ar:"الشعراء",en:"Ash-Shu'ara'"},27:{ar:"النمل",en:"An-Naml"},28:{ar:"القصص",en:"Al-Qasas"},29:{ar:"العنكبوت",en:"Al-Ankabut"},30:{ar:"الروم",en:"Ar-Rum"},31:{ar:"لقمان",en:"Luqman"},32:{ar:"السجدة",en:"As-Sajdah"},33:{ar:"الأحزاب",en:"Al-Ahzab"},34:{ar:"سبإ",en:"Saba'"},35:{ar:"فاطر",en:"Fatir"},36:{ar:"يس",en:"Ya-Sin"},37:{ar:"الصافات",en:"As-Saffat"},38:{ar:"ص",en:"Sad"},39:{ar:"الزمر",en:"Az-Zumar"},40:{ar:"غافر",en:"Ghafir"},41:{ar:"فصلت",en:"Fussilat"},42:{ar:"الشورى",en:"Ash-Shura"},43:{ar:"الزخرف",en:"Az-Zukhruf"},44:{ar:"الدخان",en:"Ad-Dukhan"},45:{ar:"الجاثية",en:"Al-Jathiya"},46:{ar:"الأحقاف",en:"Al-Ahqaf"},47:{ar:"محمد",en:"Muhammad"},48:{ar:"الفتح",en:"Al-Fath"},49:{ar:"الحجرات",en:"Al-Hujurat"},50:{ar:"ق",en:"Qaf"},51:{ar:"الذاريات",en:"Adh-Dhariyat"},52:{ar:"الطور",en:"At-Tur"},53:{ar:"النجم",en:"An-Najm"},54:{ar:"القمر",en:"Al-Qamar"},55:{ar:"الرحمن",en:"Ar-Rahman"},56:{ar:"الواقعة",en:"Al-Waqi'ah"},57:{ar:"الحديد",en:"Al-Hadid"},58:{ar:"المجادلة",en:"Al-Mujadila"},59:{ar:"الحشر",en:"Al-Hashr"},60:{ar:"الممتحنة",en:"Al-Mumtahinah"},61:{ar:"الصف",en:"As-Saff"},62:{ar:"الجمعة",en:"Al-Jumu'ah"},63:{ar:"المنافقون",en:"Al-Munafiqun"},64:{ar:"التغابن",en:"At-Taghabun"},65:{ar:"الطلاق",en:"At-Talaq"},66:{ar:"التحريم",en:"At-Tahrim"},67:{ar:"الملك",en:"Al-Mulk"},68:{ar:"القلم",en:"Al-Qalam"},69:{ar:"الحاقة",en:"Al-Haqqah"},70:{ar:"المعارج",en:"Al-Ma'arij"},71:{ar:"نوح",en:"Nuh"},72:{ar:"الجن",en:"Al-Jinn"},73:{ar:"المزمل",en:"Al-Muzzammil"},74:{ar:"المدثر",en:"Al-Muddaththir"},75:{ar:"القيامة",en:"Al-Qiyamah"},76:{ar:"الإنسان",en:"Al-Insan"},77:{ar:"المرسلات",en:"Al-Mursalat"},78:{ar:"النبإ",en:"An-Naba'"},79:{ar:"النازعات",en:"An-Nazi'at"},80:{ar:"عبس",en:"'Abasa"},81:{ar:"التكوير",en:"At-Takwir"},82:{ar:"الإنفطار",en:"Al-Infitar"},83:{ar:"المطففين",en:"Al-Mutaffifin"},84:{ar:"الإنشقاق",en:"Al-Inshiqaq"},85:{ar:"البروج",en:"Al-Buruj"},86:{ar:"الطارق",en:"At-Tariq"},87:{ar:"الأعلى",en:"Al-A'la"},88:{ar:"الغاشية",en:"Al-Ghashiyah"},89:{ar:"الفجر",en:"Al-Fajr"},90:{ar:"البلد",en:"Al-Balad"},91:{ar:"الشمس",en:"Ash-Shams"},92:{ar:"الليل",en:"Al-Layl"},93:{ar:"الضحى",en:"Ad-Duha"},94:{ar:"الشرح",en:"Ash-Sharh"},95:{ar:"التين",en:"At-Tin"},96:{ar:"العلق",en:"Al-'Alaq"},97:{ar:"القدر",en:"Al-Qadr"},98:{ar:"البينة",en:"Al-Bayyinah"},99:{ar:"الزلزلة",en:"Az-Zalzalah"},100:{ar:"العاديات",en:"Al-'Adiyat"},101:{ar:"القارعة",en:"Al-Qari'ah"},102:{ar:"التكاثر",en:"At-Takathur"},103:{ar:"العصر",en:"Al-'Asr"},104:{ar:"الهمزة",en:"Al-Humazah"},105:{ar:"الفيل",en:"Al-Fil"},106:{ar:"قريش",en:"Quraysh"},107:{ar:"الماعون",en:"Al-Ma'un"},108:{ar:"الكوثر",en:"Al-Kawthar"},109:{ar:"الكافرون",en:"Al-Kafirun"},110:{ar:"النصر",en:"An-Nasr"},111:{ar:"المسد",en:"Al-Masad"},112:{ar:"الإخلاص",en:"Al-Ikhlas"},113:{ar:"الفلق",en:"Al-Falaq"},114:{ar:"الناس",en:"An-Nas"}};
@@ -2926,6 +3198,19 @@ const themeToggle = document.getElementById('themeToggle');
   }
 })();
 
+// Exit-confirmation preference (tester feedback #2) -- default on (localStorage
+// unset or '1'), matching how the popstate handler further down reads it fresh
+// on every back-press rather than caching it, so this toggle takes effect
+// immediately with no reload needed.
+(function(){
+  const t = document.getElementById('sExitConfirmToggle');
+  if(!t) return;
+  t.checked = localStorage.getItem('quran_exit_confirm') !== '0';
+  t.addEventListener('change', (e)=>{
+    localStorage.setItem('quran_exit_confirm', e.target.checked ? '1' : '0');
+  });
+})();
+
 if (themeToggle) {
   themeToggle.addEventListener('change', (e) => {
     if (e.target.checked) {
@@ -3168,6 +3453,15 @@ document.querySelectorAll('.nav-item').forEach(item=>{
 
 
 document.getElementById('sHelpBtn')?.addEventListener('click',()=>openPanel('helpPanel'));
+/* Same Play Store URL the Download panel's Android button already uses
+   (tester feedback #3 -- "Rate Your App" button). */
+document.getElementById('sRateBtn')?.addEventListener('click',()=>{
+  window.open('https://play.google.com/store/apps/details?id=com.maalquran.twa','_blank','noopener');
+});
+document.getElementById('sTourBtn')?.addEventListener('click',()=>{
+  closePanel('settingsPanel');
+  setTimeout(()=>{ if(typeof window.startWalkthrough==='function') window.startWalkthrough(); }, 300);
+});
 /* ── Download the Windows installer (.exe) embedded in this page ── */
 async function getAppSourceHTML(){
   try{
