@@ -1963,6 +1963,23 @@ body.dark .tafsir-selector-row label {
 })();
 </script>
 
+<!-- ════════ Shared small "mini modal" look, used by the exit-confirm dialog
+     below and the milestone rate-prompt further down. ════════ -->
+<style>
+  .mini-modal-overlay{display:none;position:fixed;inset:0;z-index:5100;
+    background:rgba(15,23,42,.55);align-items:center;justify-content:center;padding:16px;}
+  .mini-modal-box{background:#fdfaf4;color:#1f2933;border-radius:16px;
+    padding:22px 22px 18px;width:min(320px,92vw);text-align:center;
+    box-shadow:0 12px 50px rgba(0,0,0,.45);font-family:system-ui,sans-serif;}
+  body.dark .mini-modal-box{background:#1e293b;color:#e2e8f0;}
+  .mini-modal-icon{font-size:34px;margin-bottom:6px;}
+  .mini-modal-title{font-size:16px;font-weight:700;margin-bottom:8px;line-height:1.4;}
+  .mini-modal-body{font-size:13px;line-height:1.6;margin-bottom:16px;}
+  .mini-modal-actions .tour-nav-btn{width:100%;padding:10px;font-size:13px;}
+  .mini-modal-actions{margin-bottom:10px;}
+  .mini-modal-secondary{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;}
+</style>
+
 <!-- ════════ Confirm before exiting on Back (tester feedback #2) ════════
      A hardware/gesture Back press on Android (and the browser Back button
      everywhere else) normally has nothing to pop except the app's own single
@@ -1972,10 +1989,48 @@ body.dark .tafsir-selector-row label {
      panel, the mobile drawer, or the walkthrough above) Back closes THAT
      first, one layer at a time, matching normal back-button expectations --
      only Back from the bare dashboard, with nothing open, asks to exit.
-     Uses the same window.confirm() the app already uses for delete/clear/
-     import confirmations elsewhere, rather than a new custom dialog style. -->
+
+     Uses a custom dialog, NOT window.confirm(): confirm() worked when tested
+     on desktop but silently showed nothing on iPhone in both Safari and
+     Chrome (Chrome-for-iOS is WebKit under the hood too, same as Safari --
+     Apple requires it). WebKit is known to be stricter than Blink about
+     which events count as a strong enough "user gesture" to allow a
+     blocking native dialog, and a popstate fired by a back gesture/button
+     apparently doesn't qualify there, so confirm() was likely returning
+     immediately with nothing shown rather than actually waiting on the
+     user. A plain DOM/CSS dialog isn't gated by that browser permission at
+     all, so it shows the same way on every engine. -->
+<div class="mini-modal-overlay" id="exitConfirmOverlay">
+  <div class="mini-modal-box">
+    <div class="mini-modal-icon">🚪</div>
+    <div class="mini-modal-title">تأكيد الخروج / Confirm Exit</div>
+    <div class="mini-modal-body">هل تريد الخروج من التطبيق؟<br><span style="opacity:.75">Do you want to exit the app?</span></div>
+    <div class="mini-modal-actions">
+      <button type="button" id="exitConfirmYesBtn" class="tour-nav-btn tour-nav-primary" style="background:#9b2c2c;border-color:#9b2c2c;">خروج / Exit</button>
+    </div>
+    <div class="mini-modal-secondary">
+      <button type="button" id="exitConfirmStayBtn" class="tour-skip">البقاء / Stay</button>
+    </div>
+  </div>
+</div>
 <script>
 (function(){
+  function showExitConfirmDialog(callback){
+    var ov = document.getElementById('exitConfirmOverlay');
+    var yesBtn = document.getElementById('exitConfirmYesBtn');
+    var stayBtn = document.getElementById('exitConfirmStayBtn');
+    ov.style.display = 'flex';
+    function cleanup(){
+      ov.style.display = 'none';
+      yesBtn.removeEventListener('click', onYes);
+      stayBtn.removeEventListener('click', onStay);
+    }
+    function onYes(){ cleanup(); callback(true); }
+    function onStay(){ cleanup(); callback(false); }
+    yesBtn.addEventListener('click', onYes);
+    stayBtn.addEventListener('click', onStay);
+  }
+
   function topmostOpen(){
     var tour = document.getElementById('tourOverlay');
     if(tour && tour.style.display === 'block') return 'tour';
@@ -2020,10 +2075,87 @@ body.dark .tafsir-selector-row label {
     var enabled = true;
     try{ enabled = localStorage.getItem('quran_exit_confirm') !== '0'; }catch(e){}
     if(!enabled) return;    // user turned the confirmation off in Settings: let Back exit normally
-    var reallyExit = confirm('هل تريد الخروج من التطبيق؟ / Do you want to exit the app?');
-    if(reallyExit){ try{ history.back(); }catch(e){} }
-    else{ pushGuard(); }
+    showExitConfirmDialog(function(reallyExit){
+      if(reallyExit){ try{ history.back(); }catch(e){} }
+      else{ pushGuard(); }
+    });
   });
+})();
+</script>
+
+<!-- ════════ Milestone-triggered "Rate the app" prompt ════════
+     Rather than a permanent button on the header/sidebar (which every user
+     would see on every visit -- more nagging than effective), this shows a
+     small dismissible prompt right after a genuine positive moment: finishing
+     an entire Juz. It's capped, cooldown-limited, and permanently silenced
+     either by an explicit "don't ask again" or by the user actually tapping
+     Rate once (no point asking someone who already rated). The Settings ->
+     Help & More "Rate the App" button (tester feedback #3) stays as-is for
+     anyone who wants to rate anytime unprompted. -->
+<div class="mini-modal-overlay" id="ratePromptOverlay">
+  <div class="mini-modal-box">
+    <div class="mini-modal-icon">🎉</div>
+    <div class="mini-modal-title" id="rateModalTitle"></div>
+    <div class="mini-modal-body">هل يعجبك التطبيق؟ رأيك يهمنا كثيراً!<br><span style="opacity:.75">Enjoying the app? We'd love your feedback!</span></div>
+    <div class="mini-modal-actions">
+      <button type="button" id="rateNowBtn" class="tour-nav-btn tour-nav-primary">⭐ قيّم الآن / Rate now</button>
+    </div>
+    <div class="mini-modal-secondary">
+      <button type="button" id="rateLaterBtn" class="tour-skip">لاحقاً / Maybe later</button>
+      <button type="button" id="rateNeverBtn" class="tour-skip">لا تسأل مرة أخرى / Don't ask again</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var MAX_PROMPTS = 3;
+  var COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;   // 3 days between prompts
+
+  function getInt(key, def){
+    try{ var v = parseInt(localStorage.getItem(key), 10); return isNaN(v) ? def : v; }
+    catch(e){ return def; }
+  }
+
+  function juzFullyGreen(juz){
+    var info = (typeof JUZ_PAGE_RANGES !== 'undefined') ? JUZ_PAGE_RANGES[juz - 1] : null;
+    if(!info || typeof memorization === 'undefined' || !memorization[juz]) return false;
+    return info.pages.every(function(pg){ return memorization[juz][pg] === 'green'; });
+  }
+
+  function showRatePrompt(juz){
+    var t = document.getElementById('rateModalTitle');
+    t.textContent = 'أحسنت! أتممتَ حفظ الجزء ' + juz + ' 🎉 / Great job completing Juz ' + juz + '!';
+    document.getElementById('ratePromptOverlay').style.display = 'flex';
+  }
+  function hideRatePrompt(){ document.getElementById('ratePromptOverlay').style.display = 'none'; }
+
+  document.getElementById('rateNowBtn').addEventListener('click', function(){
+    hideRatePrompt();
+    try{ localStorage.setItem('quran_rate_prompt_rated', '1'); }catch(e){}
+    window.open('https://play.google.com/store/apps/details?id=com.maalquran.twa', '_blank', 'noopener');
+  });
+  document.getElementById('rateLaterBtn').addEventListener('click', hideRatePrompt);
+  document.getElementById('rateNeverBtn').addEventListener('click', function(){
+    hideRatePrompt();
+    try{ localStorage.setItem('quran_rate_prompt_dismissed', '1'); }catch(e){}
+  });
+
+  /* Called from renderGrid()'s page-level toggle (see the tog() function)
+     right after a page is set to 'green', passing the Juz it belongs to. */
+  window.checkRateMilestone = function(juz){
+    try{
+      if(localStorage.getItem('quran_rate_prompt_dismissed') === '1') return;
+      if(localStorage.getItem('quran_rate_prompt_rated') === '1') return;
+      var shown = getInt('quran_rate_prompt_shown_count', 0);
+      if(shown >= MAX_PROMPTS) return;
+      var lastTs = getInt('quran_rate_prompt_last_ts', 0);
+      if(Date.now() - lastTs < COOLDOWN_MS) return;
+      if(!juzFullyGreen(juz)) return;
+      localStorage.setItem('quran_rate_prompt_shown_count', String(shown + 1));
+      localStorage.setItem('quran_rate_prompt_last_ts', String(Date.now()));
+      setTimeout(function(){ showRatePrompt(juz); }, 500);   // let the grid's own re-render/toast settle first
+    }catch(e){}
+  };
 })();
 </script>
 
@@ -3062,7 +3194,7 @@ window.navigateModal = function(delta) {
       const weakCnt=weakSetFor(pg).size;
       const weakTag=weakCnt?`<span class="weak-strip" title="${weakCnt} كلمات تحتاج تدريباً — اضغط لفتح الصفحة / words to practice — click to open"></span>`:'';
       cell.innerHTML=`<div class="open-page-icon" role="button"></div>${weakTag}<div class="page-number">${pg}</div>${sh}`;
-      const tog=()=>{const cur=memorization[juz][pg]||'white';const nxt=cur==='white'?'yellow':(cur==='yellow'?'green':'white');memorization[juz][pg]=nxt;saveCurrentStudent();renderGrid(juz);renderCompactSummary();updateTotalCards();showToast(`ص / Page ${pg} → ${{white:'غير محفوظ / Not memorized',yellow:'حفظ خفيف 🟡 / Light',green:'حفظ قوي 🟢 / Strong'}[nxt]}`);};
+      const tog=()=>{const cur=memorization[juz][pg]||'white';const nxt=cur==='white'?'yellow':(cur==='yellow'?'green':'white');memorization[juz][pg]=nxt;saveCurrentStudent();renderGrid(juz);renderCompactSummary();updateTotalCards();showToast(`ص / Page ${pg} → ${{white:'غير محفوظ / Not memorized',yellow:'حفظ خفيف 🟡 / Light',green:'حفظ قوي 🟢 / Strong'}[nxt]}`);if(nxt==='green'&&typeof window.checkRateMilestone==='function')window.checkRateMilestone(juz);};
       cell.title='اضغط لتغيير مستوى الحفظ / Click to change memorization level';
       cell.querySelector('.open-page-icon').title='فتح الصفحة / Open page';
       cell.addEventListener('click',e=>{if(e.target.closest('.open-page-icon')||e.target.closest('.weak-strip'))return;tog();});
