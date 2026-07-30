@@ -3260,7 +3260,7 @@ window.navigateModal = function(delta) {
   function updateTotalCards(){let s=0,l=0;for(let j=1;j<=30;j++)for(let pg in memorization[j]){const v=memorization[j][pg];if(v==='green')s++;if(v==='yellow')l++;}document.getElementById('strongCount').textContent=s;document.getElementById('lightCount').textContent=l;document.getElementById('remainingPages').textContent=604-(s+l);if(typeof checkGoalReminders==='function')checkGoalReminders();}
   function buildJuzSelectorOptions(){const s=document.getElementById('juzSelect');s.innerHTML='';for(let j=1;j<=30;j++){const o=document.createElement('option');o.value=j;o.textContent=`الجزء ${j} (ص ${JUZ_PAGE_RANGES[j-1].start}–${JUZ_PAGE_RANGES[j-1].end})`;s.appendChild(o);}s.value=currentJuz;s.onchange=e=>{currentJuz=parseInt(e.target.value);renderGrid(currentJuz);renderCompactSummary()};}
   function applyBulkLevel(){const sel=document.getElementById('bulkLevelSelect');const lvl=sel.value;const txt=sel.options[sel.selectedIndex].textContent;if(!confirm(`تطبيق "${txt}" على كافة صفحات الجزء ${currentJuz}؟ / Apply "${txt}" to all pages of Juz ${currentJuz}?`))return;for(let pg of JUZ_PAGE_RANGES[currentJuz-1].pages)memorization[currentJuz][pg]=lvl;saveCurrentStudent();renderGrid(currentJuz);renderCompactSummary();updateTotalCards();showToast(`تم تطبيق ${txt} على الجزء ${currentJuz} / Applied to Juz ${currentJuz}`);}
-  function resetCurrentStudentData(){if(!confirm(`⚠️ مسح كافة بيانات "${currentStudent}"؟ لا يمكن التراجع! / Erase all data for "${currentStudent}"? This cannot be undone!`))return;memorization=getDefaultData();saveCurrentStudent();renderAllAfterLoad();showToast('تم إعادة تعيين البيانات / Data has been reset');}
+  function resetCurrentStudentData(){if(!confirm(`⚠️ مسح كافة بيانات "${currentStudent}"؟ لا يمكن التراجع! / Erase all data for "${currentStudent}"? This cannot be undone!`))return;memorization=getDefaultData();saveCurrentStudent();localStorage.removeItem(WEAK_KEY+currentStudent);renderAllAfterLoad();showToast('تم إعادة تعيين البيانات / Data has been reset');}
   function renderAllAfterLoad(){renderGrid(currentJuz);renderCompactSummary();updateTotalCards();if(typeof checkGoalReminders==='function')checkGoalReminders();}
   /* Mobile quick-jump: first page not yet memorized (white), else first needing review (yellow). */
   window.jumpToFirstUnmemorized=function(){
@@ -4392,7 +4392,7 @@ document.getElementById('sImportFile').addEventListener('change',e=>{
 // Clear all
 document.getElementById('sClearBtn').addEventListener('click',()=>{
   if(!confirm('⚠️ حذف جميع بيانات جميع الطلاب نهائياً؟ هذا الإجراء لا يمكن التراجع عنه!\nPermanently delete ALL data for ALL students? This cannot be undone!')) return;
-  getStudentList().forEach(s=>localStorage.removeItem(STORAGE_PREFIX+s));
+  getStudentList().forEach(s=>{localStorage.removeItem(STORAGE_PREFIX+s);localStorage.removeItem(WEAK_KEY+s);});
   localStorage.removeItem('quran_current_student');
   location.reload();
 });
