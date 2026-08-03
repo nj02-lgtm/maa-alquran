@@ -488,19 +488,22 @@ body.dark .goal-note{background:#1c2a38;border-color:#33485d;color:#aebfd0}
     .pma-row1 #reciterSelect{flex:1;min-width:0;}
     .pma-row2{display:flex;align-items:center;gap:8px;width:100%;}
     .audio-label{font-size:12px;white-space:nowrap;color:#4a3a1a;}
-    .word-weak{background:rgba(214,60,60,.16);box-shadow:inset 0 -2px 0 #d43c3c;border-radius:4px;position:relative;z-index:1;}
-    .weak-strip{position:absolute;top:6px;right:0;width:5px;height:20px;background:#d43c3c;border-radius:3px 0 0 3px;cursor:pointer;padding:4px 0 4px 10px;background-clip:content-box;box-sizing:content-box;}
-    .legend-strip{display:inline-block;width:5px;height:13px;background:#d43c3c;border-radius:3px;vertical-align:middle;margin:0 3px;}
+    /* Marked/"weak" word highlight -- lightened from the original saturated
+       red (#d43c3c) at the user's request; softer coral (#db6060) reads as
+       "needs practice" without looking harsh over Arabic script. */
+    .word-weak{background:rgba(219,96,96,.14);box-shadow:inset 0 -2px 0 #db6060;border-radius:4px;position:relative;z-index:1;}
+    .weak-strip{position:absolute;top:6px;right:0;width:5px;height:20px;background:#db6060;border-radius:3px 0 0 3px;cursor:pointer;padding:4px 0 4px 10px;background-clip:content-box;box-sizing:content-box;}
+    .legend-strip{display:inline-block;width:5px;height:13px;background:#db6060;border-radius:3px;vertical-align:middle;margin:0 3px;}
     .juz-legend{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-size:10px;color:#6b5310;margin-top:2px;}
     .juz-legend .jl-item{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
     .juz-legend .jl-dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
     body.dark .juz-legend{color:#d8c98a;}
-    body.dark .weak-strip{background:#e05555;}
+    body.dark .weak-strip{background:#e57a7a;}
     .summary-card{position:relative;}
     .summary-card .weak-strip{top:4px;height:14px;width:4px;}
-    body.dark .word-weak{background:rgba(255,110,110,.22);box-shadow:inset 0 -2px 0 #ff8585;}
+    body.dark .word-weak{background:rgba(255,140,140,.18);box-shadow:inset 0 -2px 0 #ff9a9a;}
     .word-practice-btn{background:#fde68a;border:1px solid #b07a00;color:#1a1a1a;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;white-space:nowrap;font-weight:700;flex:0.7;text-align:center;}
-    .word-practice-btn.on{background:#d43c3c;border-color:#b32020;color:#fff;}
+    .word-practice-btn.on{background:#db6060;border-color:#c14747;color:#fff;}
     #reciterSelect{background:#fffbf0;border:1px solid #b89a3e;border-radius:6px;padding:4px 8px;font-size:12px;font-family:system-ui,sans-serif;flex:0 0 auto;width:390px;min-width:0;}
     .page-modal-audio audio{flex:2;min-width:160px;height:32px;}
 
@@ -559,8 +562,8 @@ body.dark .goal-note{background:#1c2a38;border-color:#33485d;color:#aebfd0}
     .ayah-hover-strip{position:absolute;z-index:0;pointer-events:none;background:rgba(140,205,150,.12);border-radius:5px;}
     .mushaf-word.ayah-hover{background:transparent;}
     .mushaf-word.active-ayah{background:transparent;box-shadow:none;outline:none;}
-    .mushaf-word.active-ayah.word-weak{background:rgba(214,60,60,.28);box-shadow:inset 0 -2px 0 #d43c3c;}
-    body.dark .mushaf-word.active-ayah.word-weak{background:rgba(255,110,110,.32);box-shadow:inset 0 -2px 0 #ff8585;}
+    .mushaf-word.active-ayah.word-weak{background:rgba(219,96,96,.20);box-shadow:inset 0 -2px 0 #db6060;}
+    body.dark .mushaf-word.active-ayah.word-weak{background:rgba(255,140,140,.24);box-shadow:inset 0 -2px 0 #ff9a9a;}
     .mushaf-word.ayah-marker{color:#b8860b;cursor:default;}
 
     /* ── Details modal ── */
@@ -4498,8 +4501,8 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
 <style id="mobile-enhancements">
 /* The splitter is hidden by default (desktop keeps side-by-side) */
 .mushaf-splitter{display:none;}
-/* Collapsible-band chevron only shows on phones */
-.mc-chevron{display:none;}
+/* Collapsible-band toggle button only shows on phones */
+.mc-toggle-btn{display:none;}
 /* Keep Add + Delete student buttons grouped on one line always */
 .student-btns{display:flex;gap:8px;align-items:center;flex-wrap:nowrap;}
 
@@ -4642,10 +4645,12 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
      contents and the number can never overflow, on any WebView/engine. */
   .page-cell{min-height:92px;}
 
-  /* ── 9. Memorized Juz / Full Details: collapsible band ── */
+  /* ── 9. Memorized Juz / Full Details: collapsible band ──
+     The header itself is no longer a tap target (only the labeled button is),
+     so it doesn't need cursor:pointer/user-select:none anymore. */
   .panel.mobile-collapsible{padding:0;gap:0;}
   .panel.mobile-collapsible > .panel-header{
-    padding:10px 12px;margin:0;cursor:pointer;user-select:none;
+    padding:10px 12px;margin:0;
     background:#f3e9d7;border-radius:12px;align-items:center;
   }
   .panel.mobile-collapsible > .panel-header .panel-title{flex:1 1 auto;}
@@ -4653,8 +4658,9 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .panel.mobile-collapsible.collapsed > :not(.panel-header){display:none !important;}
   .panel.mobile-collapsible .summary-grid{margin:10px 8px 0;}
   .panel.mobile-collapsible > #resetAllDataBtn{width:auto !important;display:block;margin:10px 12px 12px;}
-  .panel.mobile-collapsible .mc-chevron{display:inline-block;transition:transform .2s;font-size:24px;opacity:.9;line-height:1;vertical-align:middle;}
-  .panel.mobile-collapsible.collapsed .mc-chevron{transform:rotate(-90deg);transform-origin:50% 50%;}
+  .panel.mobile-collapsible .mc-toggle-btn{
+    display:inline-block;font-size:11px;padding:5px 10px;white-space:nowrap;flex:0 0 auto;
+  }
   body.dark .panel.mobile-collapsible > .panel-header{background:#0f172a;}
 
   /* ── 10. Mushaf reading page ── */
@@ -5688,8 +5694,14 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
 })();
 </script>
 <script>
-/* Mobile: turn the "Memorized Juz / Full Details" panel into a collapsible band */
+/* Mobile: turn the "Memorized Juz / Full Details" panel into a collapsible band.
+   Replaced the old "tap anywhere on the header" gesture (with a small rotating
+   arrow as the only hint) with an explicit, labeled Show/Hide button -- it's
+   unambiguous, doesn't require excluding the "Full Details" button from a
+   shared click zone, and the label always states what tapping it will do. */
 (function(){
+  var SHOW_LABEL = '\u25B8 \u0639\u0631\u0636 \u0627\u0644\u0623\u062C\u0632\u0627\u0621 / Show';
+  var HIDE_LABEL = '\u25BE \u0625\u062E\u0641\u0627\u0621 \u0627\u0644\u0623\u062C\u0632\u0627\u0621 / Hide';
   function init(){
     var panels = document.querySelectorAll('.layout-row .panel');
     if(panels.length < 2) return;
@@ -5698,24 +5710,41 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     panel.dataset.mcInit = '1';
     panel.classList.add('mobile-collapsible');
     var header = panel.querySelector('.panel-header');
-    if(header && !header.querySelector('.mc-chevron')){
-      var chev = document.createElement('span');
-      chev.className = 'mc-chevron';
-      chev.setAttribute('aria-hidden','true');
-      chev.textContent = '▾';
-      chev.style.marginInlineStart = '6px';
-      header.appendChild(chev);
+    var btn = header && header.querySelector('.mc-toggle-btn');
+    if(header && !btn){
+      btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn-primary btn-outline mc-toggle-btn';
+      btn.setAttribute('aria-expanded','true');
+      btn.textContent = HIDE_LABEL;
+      header.appendChild(btn);
     }
-    /* Start expanded on mobile; it collapses automatically after a juz is picked. */
-    if(header){
-      header.addEventListener('click', function(e){
-        if(e.target.closest('#openModalBtn')) return;
-        if(window.innerWidth <= 700) panel.classList.toggle('collapsed');
+    function syncLabel(){
+      if(!btn) return;
+      var collapsed = panel.classList.contains('collapsed');
+      btn.textContent = collapsed ? SHOW_LABEL : HIDE_LABEL;
+      btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    }
+    if(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(window.innerWidth <= 700){
+          panel.classList.toggle('collapsed');
+          syncLabel();
+        }
       });
     }
     window.addEventListener('resize', function(){
       if(window.innerWidth > 700) panel.classList.remove('collapsed');
+      syncLabel();
     });
+    /* Other code (see the "after picking a juz" flow further down) also adds
+       .collapsed to this panel directly -- watch for that so the button's
+       label never goes stale when the collapse happens without a button tap. */
+    if(window.MutationObserver){
+      new MutationObserver(syncLabel).observe(panel, {attributes:true, attributeFilter:['class']});
+    }
+    syncLabel();
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
