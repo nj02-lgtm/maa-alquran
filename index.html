@@ -4660,7 +4660,19 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .panel.mobile-collapsible > #resetAllDataBtn{width:auto !important;display:block;margin:10px 12px 12px;}
   .panel.mobile-collapsible .mc-toggle-btn{
     display:inline-block;font-size:11px;padding:5px 10px;white-space:nowrap;flex:0 0 auto;
+    /* Explicit black (not the inherited faded blue from .btn-outline) for legibility. */
+    color:#1a1a1a;font-weight:600;
   }
+  /* .btn-primary:hover turns solid dark blue -- fine for the big filled buttons it
+     was written for, but on touch devices that :hover state gets "stuck" after a
+     tap (a known mobile WebKit/WebView quirk) and this small outline button was
+     staying dark blue for several seconds. Neutralize hover here and give a
+     quick, subtle :active flash instead, which always releases on touch-end. */
+  .mc-toggle-btn:hover{background:transparent;color:#1a1a1a;}
+  .mc-toggle-btn:active{background:rgba(31,79,123,.14);}
+  body.dark .panel.mobile-collapsible .mc-toggle-btn{color:#f1e9d2;}
+  body.dark .mc-toggle-btn:hover{background:transparent;color:#f1e9d2;}
+  body.dark .mc-toggle-btn:active{background:rgba(255,255,255,.10);}
   body.dark .panel.mobile-collapsible > .panel-header{background:#0f172a;}
 
   /* ── 10. Mushaf reading page ── */
@@ -5700,8 +5712,8 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
    unambiguous, doesn't require excluding the "Full Details" button from a
    shared click zone, and the label always states what tapping it will do. */
 (function(){
-  var SHOW_LABEL = '\u25B8 \u0639\u0631\u0636 \u0627\u0644\u0623\u062C\u0632\u0627\u0621 / Show';
-  var HIDE_LABEL = '\u25BE \u0625\u062E\u0641\u0627\u0621 \u0627\u0644\u0623\u062C\u0632\u0627\u0621 / Hide';
+  var SHOW_LABEL = '\u25B8 \u0639\u0631\u0636 \u0627\u0644\u0623\u062C\u0632\u0627\u0621 / Show Juz List';
+  var HIDE_LABEL = '\u25BE \u0625\u062E\u0641\u0627\u0621 \u0627\u0644\u0623\u062C\u0632\u0627\u0621 / Hide Juz List';
   function init(){
     var panels = document.querySelectorAll('.layout-row .panel');
     if(panels.length < 2) return;
