@@ -2511,8 +2511,26 @@ let pagePlayback = {
   verses: [],          // array of { key, elements[] }
   currentIndex: 0,
   audio: null,
-  stopRequested: false
+  stopRequested: false,
+  // Set right before we intentionally clear audio.src (page navigation, closing
+  // the reader) so the error handler below can tell that apart from a real
+  // playback failure. Clearing .src on an <audio> element fires a spurious
+  // 'error' event in most browsers -- without this flag, three quick page
+  // turns/back-outs looked exactly like three real audio failures and wrongly
+  // triggered the "no audio available" message even while fully online.
+  suppressNextError: false
 };
+
+// Pause and clear the shared page-audio element for a reason that is NOT a
+// playback failure (navigating to another page, closing the reader, etc.).
+// Always use this instead of touching audio.pause()/audio.src directly.
+function clearPageAudio() {
+  const audio = document.getElementById('pageAudioPlayer');
+  if (!audio) return;
+  pagePlayback.suppressNextError = true;
+  try { audio.pause(); } catch (e) {}
+  audio.src = '';
+}
 
 // Whether the user has expressed intent to hear audio. Starts off so opening a
 // page (or selecting an ayah) only shows the verse/translation without playing.
@@ -2595,6 +2613,13 @@ async function playNextVerse() {
     };
     
     audio.onerror = () => {
+        // An intentional clearPageAudio() call (page turn, closing the reader)
+        // just fired this -- not a real playback failure. Consume the flag and
+        // ignore it.
+        if (pagePlayback.suppressNextError) {
+            pagePlayback.suppressNextError = false;
+            return;
+        }
         // Count consecutive failures. One bad file is worth skipping; a streak
         // means the audio source is unavailable (e.g. offline without this
         // reciter downloaded) -> stop and tell the user instead of racing
@@ -2619,7 +2644,7 @@ async function goToNextPageAndContinuePlayback() {
     modalPageNumber = nextPage;
     audioIntent = true;                       // stay in listening mode across pages
     const audio = document.getElementById('pageAudioPlayer');
-    if (audio) { try { audio.pause(); } catch (e) {} audio.src = ''; }
+    if (audio) clearPageAudio();
     try {
         await renderMushafPage(nextPage);     // renders + silently selects first ayah
     } catch (e) {
@@ -3082,7 +3107,9 @@ window.navigateModal = function(delta) {
     try{
       audio.src=await getAudioUrl(s,a,rec);
       audio.onended=()=>{st.errStreak=0;repeatAdvance();};
-      audio.onerror=()=>{st.errStreak=(st.errStreak||0)+1;
+      audio.onerror=()=>{
+        if (pagePlayback.suppressNextError) { pagePlayback.suppressNextError = false; return; }
+        st.errStreak=(st.errStreak||0)+1;
         if(st.errStreak>=3){stopRepeatPlayback(true);showToast('🔇 لا يتوفر صوت — إن كنت دون اتصال حمّل هذا القارئ من «التنزيل دون اتصال» / No audio — if offline, download this reciter in Offline Downloads',5000);return;}
         st.rep=st.perAyah;repeatAdvance();};
       await audio.play();
@@ -3154,7 +3181,7 @@ window.navigateModal = function(delta) {
     const newPage=Math.max(1,Math.min(604,modalPageNumber+delta));
     if(newPage===modalPageNumber)return;
     modalPageNumber=newPage;
-    const audio=document.getElementById('pageAudioPlayer');audio.pause();audio.src='';
+    clearPageAudio();
     renderMushafPage(newPage);
   }
   // Horizontal swipe to turn pages in the reading view (mobile).
@@ -3187,7 +3214,7 @@ window.navigateModal = function(delta) {
     /* Release the page-behind freeze applied when the modal opened. */
     document.documentElement.style.overflow = '';
     document.documentElement.style.overscrollBehavior = '';
-    const audio=document.getElementById('pageAudioPlayer');audio.pause();audio.src='';
+    const audio=document.getElementById('pageAudioPlayer');clearPageAudio();
     if(currentFetchController){currentFetchController.abort();currentFetchController=null;}
   }
 
