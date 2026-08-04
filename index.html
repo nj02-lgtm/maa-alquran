@@ -1317,6 +1317,7 @@ body.dark .tafsir-selector-row label {
            taking layout width away from the reading area. -->
       <button class="landscape-side-btn" id="landscapePlayBtn" type="button" aria-label="تشغيل التلاوة / Play recitation" title="تشغيل التلاوة / Play recitation">▶</button>
       <button class="landscape-side-btn" id="landscapePracticeBtn" type="button" aria-label="تحديد الكلمات للتدريب / Mark words for practice" title="تحديد الكلمات للتدريب / Mark words for practice">🖍️</button>
+      <button class="landscape-side-btn" id="landscapeSpeedBtn" type="button" aria-label="سرعة التلاوة / Recitation speed" title="سرعة التلاوة / Recitation speed">1×</button>
       <div class="page-modal-box">
 
         <div class="page-modal-content">
@@ -1378,6 +1379,7 @@ body.dark .tafsir-selector-row label {
     <button id="fullViewBtn" class="mushaf-nav-btn" title="ملء الشاشة / Full page" style="background:#1e4e7a;color:#fff;flex:0 0 auto;height:auto;min-height:0;align-self:stretch;box-sizing:border-box;font-size:10.5px;font-weight:700;padding:4px 9px;flex-direction:column;justify-content:center;line-height:1.15;gap:0;overflow:hidden;"><span style="font-size:14px;line-height:1;">⛶</span><span>تكبير / Full</span></button>
     <button id="wordPracticeBtn" class="word-practice-btn" style="display:none" title="حدّد الكلمات الصعبة لتدريبها: اضغط الكلمة لتحديدها ومرة أخرى عند حفظها / Mark hard words for practice: tap a word to mark it, tap again once memorized"></button>
     <button id="repeatModeBtn" class="mushaf-nav-btn" style="background:#1f4f7b;color:#fff;border-color:#163c5e;font-size:11px;font-weight:400;padding:6px 10px;flex:0.6;text-align:center;" title="إعدادات التكرار / Set repetition">🔁 تكرار / Repeat</button>
+    <button id="speedBtn" class="mushaf-nav-btn" title="سرعة التلاوة / Recitation speed" style="background:#4a3a1a;color:#f7f3e3;border-color:#2a1a0a;font-size:11px;font-weight:700;padding:6px 8px;flex:0 0 auto;white-space:nowrap;">1×</button>
   </div>
   <div class="pma-row2">
     <span id="playbackStatus" style="font-size:11px;color:#4a3a1a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
@@ -4656,7 +4658,8 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .page-modal-audio #stopPlaybackBtn,
   .page-modal-audio #playPageBtn,
   .page-modal-audio #wordPracticeBtn,
-  .page-modal-audio #repeatModeBtn{
+  .page-modal-audio #repeatModeBtn,
+  .page-modal-audio #speedBtn{
     flex:1 1 calc(50% - 3px) !important;
     min-width:0;
     height:auto !important;
@@ -4682,6 +4685,7 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .page-modal-audio #playPageBtn,
   .page-modal-audio #wordPracticeBtn,
   .page-modal-audio #repeatModeBtn,
+  .page-modal-audio #speedBtn,
   .page-modal-audio #fullViewBtn{
     height:auto !important;min-height:0 !important;max-height:none !important;
     align-self:stretch !important;
@@ -5598,6 +5602,68 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
 })();
 </script>
 <script>
+/* ── Recitation speed control ──────────────────────────────────────────────
+   Cycles through four steps on tap: 0.75× → 1× → 1.25× → 1.5× → 0.75×...
+   Two surfaces share one state:
+     • #speedBtn          — portrait/desktop controls row (always visible)
+     • #landscapeSpeedBtn — landscape gutter (mobile only, same 38px circle)
+   audio.playbackRate resets to 1 every time a new src is loaded, so we
+   re-apply the saved rate in the audio 'play' event as well as on tap.
+   Preference saved to localStorage so it persists across sessions.        */
+(function(){
+  var STEPS = [0.75, 1, 1.25, 1.5];
+  var LABELS = ['0.75×', '1×', '1.25×', '1.5×'];
+
+  function getStep(){
+    try{
+      var v = parseFloat(localStorage.getItem('quran_speed'));
+      var i = STEPS.indexOf(v);
+      return i >= 0 ? i : 1;   // default 1× (index 1)
+    }catch(e){ return 1; }
+  }
+  function saveStep(i){
+    try{ localStorage.setItem('quran_speed', String(STEPS[i])); }catch(e){}
+  }
+
+  var _currentStep = getStep();
+
+  function applyRate(){
+    var audio = document.getElementById('pageAudioPlayer');
+    if(audio) try{ audio.playbackRate = STEPS[_currentStep]; }catch(e){}
+  }
+
+  function syncButtons(){
+    var lbl = LABELS[_currentStep];
+    var b1 = document.getElementById('speedBtn');
+    var b2 = document.getElementById('landscapeSpeedBtn');
+    if(b1){ b1.textContent = lbl; b1.title = 'سرعة التلاوة / Recitation speed: ' + lbl; }
+    if(b2){ b2.textContent = lbl; b2.title = 'سرعة التلاوة / Recitation speed: ' + lbl; }
+  }
+
+  function onSpeedTap(e){
+    e.preventDefault(); e.stopPropagation();
+    _currentStep = (_currentStep + 1) % STEPS.length;
+    saveStep(_currentStep);
+    applyRate();
+    syncButtons();
+  }
+
+  var b1 = document.getElementById('speedBtn');
+  var b2 = document.getElementById('landscapeSpeedBtn');
+  if(b1) b1.addEventListener('click', onSpeedTap);
+  if(b2) b2.addEventListener('click', onSpeedTap);
+
+  /* Re-apply rate whenever a new track starts playing (new src resets it). */
+  var audio = document.getElementById('pageAudioPlayer');
+  if(audio) audio.addEventListener('play', applyRate);
+
+  /* Initialise labels to match saved preference on load. */
+  syncButtons();
+  /* Also apply rate immediately if audio happens to already be loaded. */
+  applyRate();
+})();
+</script>
+<script>
 /* Mobile: shorten <option> text in Level dropdown — CSS can't reach native options on phones */
 (function(){
   function shortenOptions(){
@@ -6132,6 +6198,10 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     top:calc(50% + 8px);background:#b07a00;
   }
   #pageContentModal.open #landscapePracticeBtn.on{background:#9b2c2c;}
+  #pageContentModal.open #landscapeSpeedBtn{
+    top:calc(50% + 62px);background:#4a3a1a;
+    font-size:11px;font-weight:700;letter-spacing:-.5px;
+  }
 }
 
 @keyframes mobFlash{
