@@ -4649,22 +4649,35 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .page-modal-audio{padding:6px 10px !important;gap:6px !important;}
 
   .page-modal-audio .pma-row1{flex-wrap:wrap;gap:6px !important;}
+  /* Reciter row: dropdown shrinks to fill available space, speed button sits
+     flush right next to it. The dropdown no longer needs to be full-width
+     since it shares the row with the speed button. */
   .page-modal-audio #reciterSelect{
-    flex:1 1 100% !important;width:100% !important;
-    order:-1;                       /* reciter select always on its own top row */
+    flex:1 1 0 !important;min-width:0 !important;width:auto !important;
+    order:-1;
   }
-  .page-modal-audio .audio-label{display:none;}   /* 🎧 icon: redundant once reciter has its own row */
+  .page-modal-audio #speedBtn{
+    order:-1;                          /* same row as reciter select */
+    flex:0 0 auto !important;
+    min-width:44px;
+    padding:4px 8px !important;
+    font-size:11px !important;
+    font-weight:700 !important;
+    white-space:nowrap !important;
+    align-self:stretch !important;
+    height:auto !important;min-height:0 !important;
+  }
+  .page-modal-audio .audio-label{display:none;}
 
   .page-modal-audio #stopPlaybackBtn,
   .page-modal-audio #playPageBtn,
   .page-modal-audio #wordPracticeBtn,
-  .page-modal-audio #repeatModeBtn,
-  .page-modal-audio #speedBtn{
+  .page-modal-audio #repeatModeBtn{
     flex:1 1 calc(50% - 3px) !important;
     min-width:0;
     height:auto !important;
     min-height:34px;
-    white-space:normal !important;   /* let long bilingual labels wrap to 2 lines instead of clipping */
+    white-space:normal !important;
     line-height:1.25;
     font-size:11px !important;
     padding:6px 4px !important;
@@ -4685,15 +4698,13 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .page-modal-audio #playPageBtn,
   .page-modal-audio #wordPracticeBtn,
   .page-modal-audio #repeatModeBtn,
-  .page-modal-audio #speedBtn,
   .page-modal-audio #fullViewBtn{
     height:auto !important;min-height:0 !important;max-height:none !important;
     align-self:stretch !important;
   }
-  /* Reciter select takes its own line; the three action buttons then share a
-     single row below it. Equal flex with a small min-width keeps them even
-     and stops any one label from pushing the others to a second row. */
-  .page-modal-audio .pma-row1 #reciterSelect{flex:1 1 100% !important;min-width:0;align-self:auto !important;}
+  /* The earlier rule set reciterSelect to flex:1 1 100% for when it was on
+     its own row -- override it here now that it shares the row with speedBtn */
+  .page-modal-audio .pma-row1 #reciterSelect{flex:1 1 0 !important;min-width:0;align-self:auto !important;}
   .page-modal-audio #playPageBtn,
   .page-modal-audio #wordPracticeBtn,
   .page-modal-audio #repeatModeBtn{
@@ -4701,6 +4712,8 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
     padding:6px 4px !important;font-size:10.5px !important;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
+  .page-modal-audio #reciterSelect{order:-2;}
+  .page-modal-audio #speedBtn{order:-1;}
   .page-modal-audio #playPageBtn{order:1;}
   .page-modal-audio #stopPlaybackBtn{order:2;}
   .page-modal-audio #wordPracticeBtn{order:3;}
