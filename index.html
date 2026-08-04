@@ -485,6 +485,11 @@ body.dark .goal-note{background:#1c2a38;border-color:#33485d;color:#aebfd0}
     /* ── Bottom audio bar (full width) ── */
     .page-modal-audio{padding:8px 18px;background:#f3e9d7;border-top:1px solid #d4c4a0;display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
     .pma-row1{display:flex;align-items:center;gap:6px;width:100%;}
+    /* Wrapper around reciterSelect + speedSelect. On desktop this is just
+       an inline flex group sitting among the other controls on one row; the
+       mobile media query below additionally makes it force its own full
+       line (flex:1 1 100%) so it wraps deterministically above the buttons. */
+    .pma-reciter-row{display:flex;align-items:center;gap:6px;flex:1;min-width:0;}
     .pma-row1 #reciterSelect{flex:1;min-width:0;}
     .pma-row2{display:flex;align-items:center;gap:8px;width:100%;}
     .audio-label{font-size:12px;white-space:nowrap;color:#4a3a1a;}
@@ -1373,19 +1378,21 @@ body.dark .tafsir-selector-row label {
         <div class="page-modal-audio">
   <div class="pma-row1">
     <span class="audio-label">🎧</span>
-    <select id="reciterSelect"></select>
+    <div class="pma-reciter-row">
+      <select id="reciterSelect"></select>
+      <select id="speedSelect" title="سرعة التلاوة / Recitation speed" style="flex:0 0 64px;width:64px;font-size:11px;font-weight:700;padding:4px 4px;border-radius:6px;border:1px solid #b9aa88;background:#f3e9d7;color:#4a3a1a;cursor:pointer;">
+        <option value="0.75">0.75×</option>
+        <option value="1" selected>1×</option>
+        <option value="1.25">1.25×</option>
+        <option value="1.5">1.5×</option>
+        <option value="2">2×</option>
+      </select>
+    </div>
     <button id="stopPlaybackBtn" class="mushaf-nav-btn" style="background:#9b2c2c;color:white;flex-shrink:0;font-size:11px;font-weight:400;">⏹ إيقاف التشغيل / Stop</button>
     <button id="playPageBtn" class="mushaf-nav-btn" style="background:#d9f5c9;color:#1a1a1a;border:1px solid #5cb85c;flex-shrink:0;font-size:11px;font-weight:700;">▶ تشغيل / Play</button>
     <button id="fullViewBtn" class="mushaf-nav-btn" title="ملء الشاشة / Full page" style="background:#1e4e7a;color:#fff;flex:0 0 auto;height:auto;min-height:0;align-self:stretch;box-sizing:border-box;font-size:10.5px;font-weight:700;padding:4px 9px;flex-direction:column;justify-content:center;line-height:1.15;gap:0;overflow:hidden;"><span style="font-size:14px;line-height:1;">⛶</span><span>تكبير / Full</span></button>
     <button id="wordPracticeBtn" class="word-practice-btn" style="display:none" title="حدّد الكلمات الصعبة لتدريبها: اضغط الكلمة لتحديدها ومرة أخرى عند حفظها / Mark hard words for practice: tap a word to mark it, tap again once memorized"></button>
     <button id="repeatModeBtn" class="mushaf-nav-btn" style="background:#1f4f7b;color:#fff;border-color:#163c5e;font-size:11px;font-weight:400;padding:6px 10px;flex:0.6;text-align:center;" title="إعدادات التكرار / Set repetition">🔁 تكرار / Repeat</button>
-    <select id="speedSelect" title="سرعة التلاوة / Recitation speed" style="flex:0 0 auto;font-size:11px;font-weight:700;padding:4px 6px;border-radius:6px;border:1px solid #b9aa88;background:#f3e9d7;color:#4a3a1a;cursor:pointer;">
-      <option value="0.75">0.75×</option>
-      <option value="1" selected>1×</option>
-      <option value="1.25">1.25×</option>
-      <option value="1.5">1.5×</option>
-      <option value="2">2×</option>
-    </select>
   </div>
   <div class="pma-row2">
     <span id="playbackStatus" style="font-size:11px;color:#4a3a1a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
@@ -4655,23 +4662,38 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .page-modal-audio{padding:6px 10px !important;gap:6px !important;}
 
   .page-modal-audio .pma-row1{flex-wrap:wrap;gap:6px !important;}
-  /* Reciter row: the reciter dropdown takes ALL the remaining width so even
-     the longest name fits, and the speed box is a fixed compact width pinned
-     to the row's left edge (RTL: the visual left). Its left edge lines up
-     with the left edge of the Repeat button on the row below because both
-     rows share the same .page-modal-audio padding, and Repeat is the
-     left-most (last, in RTL order) button on its row. */
+  /* Reciter + speed now share a wrapper div that takes the FULL row width
+     (flex:1 1 100%, same trick the reciter box alone used before) -- this
+     guarantees it wraps onto its own line deterministically, the same way
+     the button row below guarantees its own line by also summing to 100%.
+     Relying on `order` alone on loose siblings (the previous approach) was
+     fragile: #fullViewBtn has no explicit order (defaults to 0), which sits
+     between the reciter/speed group and the other buttons in flow order and
+     could pull onto the wrong line depending on available width -- a real
+     wrapper element removes that ambiguity entirely.
+     Inside the wrapper: reciterSelect is first in DOM order and grows to
+     fill remaining space; speedSelect is fixed-width and second in DOM
+     order, which in this RTL layout puts it flush against the wrapper's
+     left edge. Because the wrapper spans the same 100% width (between the
+     same container padding) as the button row below, speedSelect's left
+     edge lines up with Repeat's left edge (Repeat is last-in-flow = left-most
+     among the buttons in RTL) without needing any manual offset. */
+  .page-modal-audio .pma-reciter-row{
+    order:-2;
+    flex:1 1 100% !important;
+    display:flex !important;
+    gap:6px;
+    align-items:center;
+  }
   .page-modal-audio #reciterSelect{
     flex:1 1 auto !important;
     width:auto !important;
     max-width:none !important;
     min-width:0 !important;
-    order:-2;
   }
   .page-modal-audio #speedSelect{
-    flex:0 0 auto !important;
+    flex:0 0 64px !important;
     width:64px !important;
-    order:-1;                                  /* visual-left of the reciter box in RTL */
     height:auto !important;min-height:0 !important;
     align-self:center !important;
   }
@@ -4710,13 +4732,6 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
     height:auto !important;min-height:0 !important;max-height:none !important;
     align-self:stretch !important;
   }
-  /* The base rule sets reciterSelect to flex:1 1 100% for when it had its own
-     full row -- keep it taking the remaining width now that the speed box
-     shares the row (speed box is fixed-width, reciter fills the rest). */
-  .page-modal-audio .pma-row1 #reciterSelect{
-    flex:1 1 auto !important;min-width:0;align-self:center !important;
-    max-width:none !important;
-  }
   .page-modal-audio #playPageBtn,
   .page-modal-audio #wordPracticeBtn,
   .page-modal-audio #repeatModeBtn{
@@ -4724,8 +4739,6 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
     padding:6px 4px !important;font-size:10.5px !important;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
-  .page-modal-audio #reciterSelect{order:-2;}
-  .page-modal-audio #speedSelect{order:-1;}
   .page-modal-audio #playPageBtn{order:1;}
   .page-modal-audio #stopPlaybackBtn{order:2;}
   .page-modal-audio #wordPracticeBtn{order:3;}
