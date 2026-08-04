@@ -1216,8 +1216,9 @@ body.dark .tafsir-selector-row label {
 	<!-- ══ INSERT THIS right after the Remaining Pages </div> card ══ -->
       <div class="card" id="readListenCard" style="flex:1 1 auto;width:auto;gap:12px;padding:8px 16px;">
         <!-- Title + small Go button -->
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">
           <div style="font-size:12px;font-weight:400;opacity:.8;">📖 اقرأ أو استمع / Read or Listen</div>
+          <button id="continueReadingBtn" hidden style="background:#2f7d4f;color:white;border:none;border-radius:40px;padding:4px 14px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">📍 متابعة (ص <span class="crb-page">1</span>) / Continue (p. <span class="crb-page">1</span>)</button>
           <button id="qnGoBtn" style="background:#1f4f7b;color:white;border:none;border-radius:40px;padding:4px 14px;font-size:11px;font-weight:700;cursor:pointer;">اذهب / Go</button>
         </div>
 
@@ -2337,7 +2338,30 @@ async function getAudioUrl(surah, ayah, folder){
   function getDefaultData(){const d={};for(let j=1;j<=30;j++){d[j]={};for(let pg of JUZ_PAGE_RANGES[j-1].pages)d[j][pg]='white';}return d;}
   function getStudentList(){const s=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(STORAGE_PREFIX)){const n=k.substring(STORAGE_PREFIX.length);if(n)s.push(n);}}return s.sort();}
   function ensureDefaultStudent(){const l=getStudentList();if(l.length===0){const n='طالب 1';localStorage.setItem(STORAGE_PREFIX+n,JSON.stringify(getDefaultData()));return n;}return l[0];}
-  function loadStudentData(name){const stored=localStorage.getItem(STORAGE_PREFIX+name);if(stored){try{memorization=JSON.parse(stored);for(let j=1;j<=30;j++){if(!memorization[j])memorization[j]={};for(let pg of JUZ_PAGE_RANGES[j-1].pages)if(!memorization[j][pg])memorization[j][pg]='white';}}catch(e){memorization=getDefaultData();saveCurrentStudent();}}else{memorization=getDefaultData();saveCurrentStudent();}renderAllAfterLoad();}
+  /* "Continue reading" -- remembers the last Mushaf page opened, per student
+     (each student profile has their own reading spot, same as their own
+     memorization record). Saved every time a page actually renders; read
+     back to show/drive the Continue button on the dashboard. */
+  function getLastReadPage(student){
+    try{ const v=localStorage.getItem('quran_last_page_'+(student||currentStudent)); const n=parseInt(v,10); return (n>=1&&n<=604)?n:null; }catch(e){ return null; }
+  }
+  function saveLastReadPage(page){
+    try{ if(currentStudent && page>=1 && page<=604) localStorage.setItem('quran_last_page_'+currentStudent, String(page)); }catch(e){}
+    updateContinueReadingBtn();
+  }
+  function updateContinueReadingBtn(){
+    const btn=document.getElementById('continueReadingBtn');
+    if(!btn) return;
+    const p=getLastReadPage();
+    if(p){
+      btn.hidden=false;
+      btn.querySelectorAll('.crb-page').forEach(el=>el.textContent=p);
+      btn.onclick=()=>openPageModal(p);
+    } else {
+      btn.hidden=true;
+    }
+  }
+  function loadStudentData(name){const stored=localStorage.getItem(STORAGE_PREFIX+name);if(stored){try{memorization=JSON.parse(stored);for(let j=1;j<=30;j++){if(!memorization[j])memorization[j]={};for(let pg of JUZ_PAGE_RANGES[j-1].pages)if(!memorization[j][pg])memorization[j][pg]='white';}}catch(e){memorization=getDefaultData();saveCurrentStudent();}}else{memorization=getDefaultData();saveCurrentStudent();}renderAllAfterLoad();updateContinueReadingBtn();}
   function saveCurrentStudent(){if(currentStudent)localStorage.setItem(STORAGE_PREFIX+currentStudent,JSON.stringify(memorization));}
   function populateStudentSelect(){const sel=document.getElementById('studentSelect');sel.innerHTML='';getStudentList().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});if(currentStudent)sel.value=currentStudent;}
   function addNewStudent(){let n=prompt('أدخل اسم الطالب الجديد / Enter new student name:');if(!n||!n.trim())return;n=n.trim().substring(0,60);if(getStudentList().includes(n)){alert('هذا الاسم موجود بالفعل / This name already exists');return;}localStorage.setItem(STORAGE_PREFIX+n,JSON.stringify(getDefaultData()));currentStudent=n;loadStudentData(n);populateStudentSelect();document.getElementById('studentSelect').value=n;localStorage.setItem('quran_current_student',n);showToast(`تم إضافة "${n}" بنجاح / "${n}" added successfully`);}
@@ -2891,6 +2915,7 @@ window.navigateModal = function(delta) {
 
   async function renderMushafPage(page){
     stopPagePlayback(true);
+    saveLastReadPage(page);
     const bodyDiv=document.getElementById('pageModalBody');
     const audioElem=document.getElementById('pageAudioPlayer');
     bodyDiv.scrollTop=0;
