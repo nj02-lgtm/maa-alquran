@@ -2111,27 +2111,39 @@ body.dark .tafsir-selector-row label {
     }catch(e){}
   }
 
-  /* Re-arm the guard again once everything has fully loaded, but only if it
-     doesn't already look armed -- avoids pushing a duplicate identical entry
-     every time (which risks re-triggering the exact WebKit collapsing bug
-     documented above) while still giving a second chance to arm on engines
-     where a pushState() this early doesn't reliably register. This is aimed
-     at the installed Android TWA specifically: its native back-button
-     integration syncs with the WebView's history stack, and on some older
-     WebViews (the A21S) that sync doesn't appear to be ready yet at
-     DOMContentLoaded, so the very first Back press from the dashboard was
-     exiting immediately with nothing to pop -- same failure mode as the
-     iPhone case, different cause, needs on-device confirmation either way. */
-  function ensureGuardArmed(){
-    if(!(history.state && history.state.quranExitGuard)) pushGuard();
+  /* THE KEY FIX: browsers (both WebKit and Chromium) deliberately ignore a
+     history entry created by pushState() when there has been no user
+     interaction on the page yet -- it is treated as a "dummy" entry and Back
+     skips over it without firing popstate. That is a deliberate security
+     measure stopping pages from trapping users who have not engaged at all.
+     Symptom: the guard reports as armed and history.length grows, but Back
+     exits anyway -- exactly what the A21S was doing, and what made this look
+     device-specific when it was not (it depended purely on whether the tester
+     had tapped something before pressing Back).
+
+     So the guard is armed ONLY from inside a real user gesture. We
+     deliberately do NOT also push one at load time: that would leave two
+     entries stacked (a dummy plus a real one), and Back would then need two
+     presses to leave the app. Consequence by design: if the user opens the
+     app and immediately presses Back without touching anything at all, it
+     exits with no prompt -- acceptable, since nothing has been done yet that
+     could be lost. */
+  var _guardListenerAttached = false;
+  function armGuardOnGesture(){
+    if(_guardListenerAttached) return;
+    _guardListenerAttached = true;
+    var gesture = (window.ontouchend === null) ? 'touchend' : 'click';
+    document.addEventListener(gesture, function(){
+      _guardListenerAttached = false;                              // allow re-attach later
+      if(history.state && history.state.quranExitGuard) return;    // already armed
+      pushGuard();
+    }, {once:true, capture:true});
   }
 
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pushGuard);
-  else pushGuard();
-  window.addEventListener('load', function(){ setTimeout(ensureGuardArmed, 60); });
-  /* Also re-arm when a bfcache'd/backgrounded page becomes visible again --
-     TWAs can restore the page without firing DOMContentLoaded a second time. */
-  window.addEventListener('pageshow', function(){ setTimeout(ensureGuardArmed, 60); });
+  armGuardOnGesture();
+  /* Re-attach after a bfcache restore: a TWA can bring the page back without
+     firing DOMContentLoaded, and the previous one-shot listener is spent. */
+  window.addEventListener('pageshow', function(){ armGuardOnGesture(); });
 
   window.addEventListener('popstate', function(){
     debugToast('popstate fired');
