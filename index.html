@@ -2081,17 +2081,60 @@ body.dark .tafsir-selector-row label {
      which is why it worked there. Giving the guard entry a distinct URL (a
      harmless hash fragment the app doesn't otherwise use) makes it a real,
      distinguishable history stop on every engine. */
+  /* Temporary diagnostic toast -- enable on a device by running
+     localStorage.setItem('quran_debug_exitguard','1') in that browser's
+     console, OR (for phones with no console, e.g. iPhone Safari) by opening
+     the site as  maalquran.com/#debugexit  once -- that sets the same flag
+     and it stays on for that browser until  maalquran.com/#debugexitoff .
+     Then reload and try Back from the dashboard. Shows exactly when a guard
+     push happens and when popstate fires, which pins down whether the push
+     isn't landing at all vs. landing but getting skipped by Back anyway --
+     the same distinction that solved the iPhone case. Silent for everyone
+     else. */
+  try{
+    if(location.hash === '#debugexit') localStorage.setItem('quran_debug_exitguard','1');
+    if(location.hash === '#debugexitoff') localStorage.removeItem('quran_debug_exitguard');
+  }catch(e){}
+  function debugToast(msg){
+    try{
+      if(localStorage.getItem('quran_debug_exitguard') === '1' && typeof showToast === 'function'){
+        showToast('🛠️ ' + msg, 3000);
+      }
+    }catch(e){}
+  }
+
   function pushGuard(){
     try{
       var base = location.href.split('#')[0];
       history.pushState({quranExitGuard:true}, '', base + '#app');
+      debugToast('guard armed');
     }catch(e){}
+  }
+
+  /* Re-arm the guard again once everything has fully loaded, but only if it
+     doesn't already look armed -- avoids pushing a duplicate identical entry
+     every time (which risks re-triggering the exact WebKit collapsing bug
+     documented above) while still giving a second chance to arm on engines
+     where a pushState() this early doesn't reliably register. This is aimed
+     at the installed Android TWA specifically: its native back-button
+     integration syncs with the WebView's history stack, and on some older
+     WebViews (the A21S) that sync doesn't appear to be ready yet at
+     DOMContentLoaded, so the very first Back press from the dashboard was
+     exiting immediately with nothing to pop -- same failure mode as the
+     iPhone case, different cause, needs on-device confirmation either way. */
+  function ensureGuardArmed(){
+    if(!(history.state && history.state.quranExitGuard)) pushGuard();
   }
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', pushGuard);
   else pushGuard();
+  window.addEventListener('load', function(){ setTimeout(ensureGuardArmed, 60); });
+  /* Also re-arm when a bfcache'd/backgrounded page becomes visible again --
+     TWAs can restore the page without firing DOMContentLoaded a second time. */
+  window.addEventListener('pageshow', function(){ setTimeout(ensureGuardArmed, 60); });
 
   window.addEventListener('popstate', function(){
+    debugToast('popstate fired');
     var open = topmostOpen();
     if(open){
       closeTopmost(open);
