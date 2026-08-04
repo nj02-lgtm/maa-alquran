@@ -4655,20 +4655,23 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
   .page-modal-audio{padding:6px 10px !important;gap:6px !important;}
 
   .page-modal-audio .pma-row1{flex-wrap:wrap;gap:6px !important;}
-  /* Reciter row: the dropdown had far more width than its longest option
-     needs, so it is capped here instead of stretching to the full row, and
-     the speed dropdown takes the freed space beside it. Both stay on their
-     own row above the action buttons, exactly as before. */
+  /* Reciter row: the reciter dropdown takes ALL the remaining width so even
+     the longest name fits, and the speed box is a fixed compact width pinned
+     to the row's left edge (RTL: the visual left). Its left edge lines up
+     with the left edge of the Repeat button on the row below because both
+     rows share the same .page-modal-audio padding, and Repeat is the
+     left-most (last, in RTL order) button on its row. */
   .page-modal-audio #reciterSelect{
     flex:1 1 auto !important;
     width:auto !important;
-    max-width:calc(100% - 82px) !important;   /* leave room for the speed box */
+    max-width:none !important;
     min-width:0 !important;
     order:-2;
   }
   .page-modal-audio #speedSelect{
     flex:0 0 auto !important;
-    order:-1;                                  /* sits beside the reciter box */
+    width:64px !important;
+    order:-1;                                  /* visual-left of the reciter box in RTL */
     height:auto !important;min-height:0 !important;
     align-self:center !important;
   }
@@ -4708,10 +4711,11 @@ document.getElementById('sClearBtn').addEventListener('click',()=>{
     align-self:stretch !important;
   }
   /* The base rule sets reciterSelect to flex:1 1 100% for when it had its own
-     full row -- keep it constrained here now that the speed box shares the row */
+     full row -- keep it taking the remaining width now that the speed box
+     shares the row (speed box is fixed-width, reciter fills the rest). */
   .page-modal-audio .pma-row1 #reciterSelect{
     flex:1 1 auto !important;min-width:0;align-self:center !important;
-    max-width:calc(100% - 82px) !important;
+    max-width:none !important;
   }
   .page-modal-audio #playPageBtn,
   .page-modal-audio #wordPracticeBtn,
