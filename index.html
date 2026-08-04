@@ -2087,6 +2087,38 @@ body.dark .tafsir-selector-row label {
      and the scaffolding can be re-enabled quickly if this ever regresses. */
   function debugToast(){}
 
+  /* SCOPE: the exit-confirmation guard runs ONLY when the app is launched as
+     an installed app (the Android TWA, or an iOS home-screen PWA) -- not in
+     an ordinary browser tab.
+
+     Rationale: in a browser tab, Back does not mean "quit the app", it means
+     "go back to whatever I was browsing before". There is no app to exit, so
+     a Confirm-Exit dialog is meaningless there, and trying to trap Back
+     fights the browser's own navigation. In testing, doing so on iPhone
+     Safari produced a first Back that did nothing and a second Back that
+     landed on "Safari cannot open the page because the server cannot be
+     found" -- Back walking off the end of our injected entries into whatever
+     preceded the tab. Not worth chasing: browser tabs are not the shipping
+     surface. Testers use the installed Play Store app, where this is
+     confirmed working.
+
+     Detection covers: Android TWA (referrer android-app://), installed PWA
+     on Chromium/Android (display-mode: standalone), and iOS home-screen PWA
+     (navigator.standalone). A plain Safari/Chrome tab matches none of these
+     and keeps completely native Back behaviour. */
+  function isInstalledApp(){
+    try{
+      if(document.referrer && document.referrer.indexOf('android-app://') === 0) return true;
+      if(navigator.standalone === true) return true;                       // iOS home-screen PWA
+      if(window.matchMedia){
+        if(window.matchMedia('(display-mode: standalone)').matches) return true;
+        if(window.matchMedia('(display-mode: fullscreen)').matches) return true;
+        if(window.matchMedia('(display-mode: minimal-ui)').matches) return true;
+      }
+    }catch(e){}
+    return false;
+  }
+
   /* Each guard entry gets a unique URL (#app1, #app2, ...) rather than a
      literal repeat of "#app". Reason: WebKit has been observed to swallow a
      Back press that moves between two adjacent history entries with an
@@ -2096,6 +2128,7 @@ body.dark .tafsir-selector-row label {
      are easy to produce. A counter makes every pushed entry distinct. */
   var _guardSeq = 0;
   function pushGuard(){
+    if(!isInstalledApp()) return;
     try{
       var base = location.href.split('#')[0];
       _guardSeq++;
@@ -2135,6 +2168,7 @@ body.dark .tafsir-selector-row label {
      could be lost. */
   var _guardListenerAttached = false;
   function armGuardOnGesture(){
+    if(!isInstalledApp()) return;         // browser tab: leave Back fully native
     if(_guardListenerAttached) return;
     _guardListenerAttached = true;
     var gesture = (window.ontouchend === null) ? 'touchend' : 'click';
@@ -2152,6 +2186,11 @@ body.dark .tafsir-selector-row label {
 
   window.addEventListener('popstate', function(){
     debugToast('popstate fired');
+    /* In a plain browser tab we never armed a guard, so Back is the user
+       genuinely navigating away -- don't intercept it, and in particular
+       don't show a Confirm-Exit dialog for a "tab" that has nothing to
+       exit. */
+    if(!isInstalledApp()) return;
     var open = topmostOpen();
     if(open){
       closeTopmost(open);
