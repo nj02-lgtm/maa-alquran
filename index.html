@@ -2081,35 +2081,40 @@ body.dark .tafsir-selector-row label {
      which is why it worked there. Giving the guard entry a distinct URL (a
      harmless hash fragment the app doesn't otherwise use) makes it a real,
      distinguishable history stop on every engine. */
-  /* Temporary diagnostic toast -- enable on a device by running
-     localStorage.setItem('quran_debug_exitguard','1') in that browser's
-     console, OR (for phones with no console, e.g. iPhone Safari) by opening
-     the site as  maalquran.com/#debugexit  once -- that sets the same flag
-     and it stays on for that browser until  maalquran.com/#debugexitoff .
-     Then reload and try Back from the dashboard. Shows exactly when a guard
-     push happens and when popstate fires, which pins down whether the push
-     isn't landing at all vs. landing but getting skipped by Back anyway --
-     the same distinction that solved the iPhone case. Silent for everyone
-     else. */
-  try{
-    if(location.hash === '#debugexit') localStorage.setItem('quran_debug_exitguard','1');
-    if(location.hash === '#debugexitoff') localStorage.removeItem('quran_debug_exitguard');
-  }catch(e){}
-  function debugToast(msg){
-    try{
-      if(localStorage.getItem('quran_debug_exitguard') === '1' && typeof showToast === 'function'){
-        showToast('🛠️ ' + msg, 3000);
-      }
-    }catch(e){}
-  }
+  /* Diagnostics for this guard were removed once the behaviour was confirmed
+     on all three test targets (A21S installed app, iPhone Chrome, iPhone
+     Safari). Kept as a no-op so the debugToast() calls below stay harmless
+     and the scaffolding can be re-enabled quickly if this ever regresses. */
+  function debugToast(){}
 
+  /* Each guard entry gets a unique URL (#app1, #app2, ...) rather than a
+     literal repeat of "#app". Reason: WebKit has been observed to swallow a
+     Back press that moves between two adjacent history entries with an
+     identical URL -- the symptom being "first Back does nothing, second Back
+     works". Since a guard can legitimately be re-pushed several times in one
+     session (closing a layer, cancelling the exit dialog), identical repeats
+     are easy to produce. A counter makes every pushed entry distinct. */
+  var _guardSeq = 0;
   function pushGuard(){
     try{
       var base = location.href.split('#')[0];
-      history.pushState({quranExitGuard:true}, '', base + '#app');
-      debugToast('guard armed');
+      _guardSeq++;
+      history.pushState({quranExitGuard:true}, '', base + '#app' + _guardSeq);
+      debugToast('guard armed (#app' + _guardSeq + ')');
     }catch(e){}
   }
+
+  /* If the page loaded already sitting on a leftover guard hash (a restored
+     session, a bfcache resume, or a reload while the guard was active), strip
+     it back to the clean base URL first. Otherwise the first guard we push
+     would sit directly on top of an old guard entry and the user would need
+     two Back presses to leave. */
+  try{
+    if(/^#app\d*$/.test(location.hash)){
+      history.replaceState(null, '', location.href.split('#')[0]);
+      debugToast('cleared stale guard hash');
+    }
+  }catch(e){}
 
   /* THE KEY FIX: browsers (both WebKit and Chromium) deliberately ignore a
      history entry created by pushState() when there has been no user
