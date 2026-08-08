@@ -2076,6 +2076,15 @@ body.dark .tafsir-selector-row label {
   function getSurahsForPage(p){return(pageToSurahs[p]||[1]).map(id=>surahNames[id]||{ar:"القرآن",en:"Quran"});}
   const JUZ_RANGES=[[1,21],[22,41],[42,61],[62,81],[82,101],[102,121],[122,141],[142,161],[162,181],[182,201],[202,221],[222,241],[242,261],[262,281],[282,301],[302,321],[322,341],[342,361],[362,381],[382,401],[402,421],[422,441],[442,461],[462,481],[482,501],[502,521],[522,541],[542,561],[562,581],[582,604]];
   const JUZ_PAGE_RANGES=JUZ_RANGES.map(([s,e],i)=>{const pages=[];for(let p=s;p<=e;p++)pages.push(p);return{juz:i+1,start:s,end:e,pages};});
+  /* Which Juz (1-30) a given Mushaf page belongs to. Used to sync the
+     dashboard's Juz selector/grid to wherever the user was last reading,
+     instead of leaving it wherever it happened to be (often Juz 1). */
+  function pageToJuz(page){
+    for(let i=0;i<JUZ_PAGE_RANGES.length;i++){
+      if(page>=JUZ_PAGE_RANGES[i].start && page<=JUZ_PAGE_RANGES[i].end) return JUZ_PAGE_RANGES[i].juz;
+    }
+    return 1;
+  }
 
 
   /* Reciters */
@@ -3124,6 +3133,23 @@ window.navigateModal = function(delta) {
     document.documentElement.style.overscrollBehavior = '';
     const audio=document.getElementById('pageAudioPlayer');clearPageAudio();
     if(currentFetchController){currentFetchController.abort();currentFetchController=null;}
+
+    /* Jump the dashboard to the Juz containing the page just closed, so the
+       user lands back on the right section instead of wherever currentJuz
+       happened to be left (often Juz 1) -- no more guessing which Juz their
+       page was in. getLastReadPage() is kept current by renderMushafPage()
+       on every page shown, so it always reflects the page just viewed. */
+    const _lastPage = getLastReadPage();
+    if(_lastPage){
+      const _juz = pageToJuz(_lastPage);
+      if(_juz !== currentJuz){
+        currentJuz = _juz;
+        const _sel = document.getElementById('juzSelect');
+        if(_sel) _sel.value = currentJuz;
+        renderGrid(currentJuz);
+        if(typeof renderCompactSummary === 'function') renderCompactSummary();
+      }
+    }
   }
 
   function initModalSelectors(){
