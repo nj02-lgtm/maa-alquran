@@ -1385,6 +1385,7 @@ body.dark .tafsir-selector-row label {
         <option value="1" selected>1×</option>
         <option value="1.25">1.25×</option>
         <option value="1.5">1.5×</option>
+        <option value="1.75">1.75×</option>
         <option value="2">2×</option>
       </select>
     </div>
@@ -5679,7 +5680,7 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
    rate is re-applied on the audio 'play' event as well as on change.
    Preference saved to localStorage so it persists across sessions.         */
 (function(){
-  var STEPS = [0.75, 1, 1.25, 1.5, 2];
+  var STEPS = [0.75, 1, 1.25, 1.5, 1.75, 2];
   function labelFor(v){ return v + '×'; }
 
   function getRate(){
