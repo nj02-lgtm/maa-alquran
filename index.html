@@ -2218,7 +2218,8 @@ async function getAudioUrl(surah, ayah, folder){
     {id:14,           ar:'ابن كثير',            en:'Ibn Kathir',        api:'qurancom'},
     {id:90,          ar:'القرطبي',             en:'Al-Qurtubi',        api:'qurancom'},
     {id:15,          ar:'الطبري',              en:'Al-Tabari',         api:'qurancom'},
-    {id:817,         ar:'English - Tafheem',   en:'Tafheem (Maududi)', api:'qurancom'}
+    {id:817,         ar:'English - Tafheem',   en:'Tafheem (Maududi)', api:'qurancom'},
+    {id:160,         ar:'اردو - ابن كثير',      en:'Urdu - Ibn Kathir', api:'qurancom'}
   ];
   let currentTafsir=TAFSIR_RESOURCES[0]; // default: التفسير الميسر
 
@@ -3167,9 +3168,12 @@ window.navigateModal = function(delta) {
             o.textContent = `📖 ${t.ar}`;
             tSel.appendChild(o);
         });
-        tSel.value = '16';   // default التفسير الميسر
+        tSel.value = String(currentTafsir.id);   // reflect whatever is actually active (saved default or session choice), not a hardcoded default
         tSel.onchange = e => {
             currentTafsir = TAFSIR_RESOURCES.find(t => String(t.id) === String(e.target.value)) || TAFSIR_RESOURCES[0];
+            localStorage.setItem('quran_default_tafsir', String(currentTafsir.id));   // persist so this choice is remembered next time the app opens
+            const sSel = document.getElementById('sTafsir');
+            if (sSel) sSel.value = String(currentTafsir.id);   // keep the Settings panel dropdown in sync too
             const active = document.querySelector('.mushaf-word.active-ayah');
             if (active && active.dataset.verseKey) loadTafsir(active.dataset.verseKey);
             else showTafsirPlaceholder();
@@ -4291,6 +4295,8 @@ function renderSettings(){
     tSel.addEventListener('change',e=>{
       currentTafsir=TAFSIR_RESOURCES.find(t=>String(t.id)===String(e.target.value))||TAFSIR_RESOURCES[0];
       localStorage.setItem('quran_default_tafsir',String(currentTafsir.id));
+      const qSel=document.getElementById('tafsirSelect');
+      if(qSel) qSel.value=String(currentTafsir.id);   // keep the quick in-reading dropdown in sync too
       showToast('تم حفظ التفسير ✅');
     });
   }
