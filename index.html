@@ -2906,7 +2906,7 @@ window.navigateModal = function(delta) {
           if(raw.includes('%')){try{raw=decodeURIComponent(raw);}catch(e){}}
           const qn={'ٞ':'ٌ','ࣰ':'ً','ࣱ':'ٌ','ࣲ':'ٍ','ٗ':'ً','ۡ':'ْ','ٖ':'ٍ'};
           span.textContent=raw.split('').map(ch=>qn[ch]||ch).join('');
-          span.dataset.verseKey=verseKey;span.title=verseKey;
+          span.dataset.verseKey=verseKey;
           span.addEventListener('click',()=>{if(word.char_type_name==='pause')return;if(wordPracticeMode){toggleWeakWord(page,span,wrap);return;}selectAyah(verseKey,wrap,audioElem);});
           lineDiv.appendChild(span);
         });
