@@ -2974,6 +2974,9 @@ window.navigateModal = function(delta) {
        directly): stops the dashboard scrolling into view behind the reader. */
     document.documentElement.style.overflow = 'hidden';
     document.documentElement.style.overscrollBehavior = 'none';
+    /* Parchment behind the reader for engines without :has() (see the
+       reading-open rule near the end of the CSS). */
+    document.documentElement.style.background = '#f7f3e3';
     initModalSelectors();
     setTimeout(()=>document.getElementById('closePageModalBtn').focus(),50);
     renderMushafPage(pageNumber);
@@ -3134,6 +3137,7 @@ window.navigateModal = function(delta) {
     /* Release the page-behind freeze applied when the modal opened. */
     document.documentElement.style.overflow = '';
     document.documentElement.style.overscrollBehavior = '';
+    document.documentElement.style.background = '';
     const audio=document.getElementById('pageAudioPlayer');clearPageAudio();
     if(currentFetchController){currentFetchController.abort();currentFetchController=null;}
 
@@ -6289,6 +6293,24 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     font-size:11px;font-weight:700;letter-spacing:-.5px;
   }
 }
+
+/* ── Nothing of the dashboard may show behind the reader (iPhone) ────────
+   On iPhone Safari (especially iOS 26, whose address bar floats over the
+   page and is see-through) a full-screen position:fixed layer is not always
+   painted under the bottom toolbar zone. Whatever the document has there
+   shows through -- here the Juz 21-30 grid and the blue "Go / اذهب" bar
+   appeared as a strip along the bottom of the Qur'an page, mostly in
+   landscape. Instead of chasing the toolbar size, hide the dashboard itself
+   while a page is open: visibility (not display) keeps its layout and scroll
+   position, so closing the reader returns to exactly the same place. Panels
+   and dialogs (.modal-overlay / .side-panel-overlay) are left alone so
+   anything opened from the reader still works. Global on purpose -- the
+   older reading-open freeze rules only apply up to 700px wide, and an
+   iPhone in landscape is wider than that. */
+body.reading-open .main > :not(.modal-overlay):not(.side-panel-overlay),
+body.reading-open .sidebar{visibility:hidden !important;}
+body.reading-open,
+html:has(body.reading-open){background:#f7f3e3 !important;}
 
 @keyframes mobFlash{
   0%,100%{box-shadow:0 0 0 0 rgba(212,160,23,0);}
