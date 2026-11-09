@@ -5604,11 +5604,25 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
     var modal = document.getElementById('pageContentModal');
     if(modal && 'MutationObserver' in window){
       new MutationObserver(function(){
-        if(modal.classList.contains('open') && MOBILE()){
-          topPane.style.height = '58%';
+        if(modal.classList.contains('open')){
+          /* On desktop-width windows the Quran and translation sit side by side
+             and the page must use the full height, so never keep a phone-style
+             inline height there. */
+          topPane.style.height = MOBILE() ? '58%' : '';
         }
       }).observe(modal, {attributes:true, attributeFilter:['class']});
     }
+    /* Widening the window (e.g. maximizing the desktop app) after the phone
+       layout set an inline height left the page stuck at 58% of the height
+       with empty space below it. Drop that inline height as soon as the layout
+       is no longer the phone one. */
+    var _paneResizeTid = null;
+    window.addEventListener('resize', function(){
+      clearTimeout(_paneResizeTid);
+      _paneResizeTid = setTimeout(function(){
+        if(!MOBILE()) topPane.style.height = '';
+      }, 100);
+    });
   }
 })();
 </script>
