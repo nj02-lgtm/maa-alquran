@@ -5623,6 +5623,36 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
         if(!MOBILE()) topPane.style.height = '';
       }, 100);
     });
+
+    /* iPhone repaint glitch: after rotating (landscape -> portrait) Safari can
+       leave the fixed reading overlay painted at its old, shorter size, so only
+       the top part of the screen shows the reader and the rest shows whatever is
+       behind it (blank cream, now that the dashboard is hidden while reading).
+       Forcing a layout/paint of the overlay after the rotation settles makes
+       Safari redraw it at the real size. Harmless on every other browser. */
+    function repaintReader(){
+      if(!modal || !modal.classList.contains('open')) return;
+      modal.style.display = 'none';
+      void modal.offsetHeight;          /* force layout while hidden */
+      modal.style.display = '';
+      window.scrollTo(0, window.scrollY);
+    }
+    var _repaintTid = null;
+    function scheduleRepaint(){
+      clearTimeout(_repaintTid);
+      [0, 200, 600].forEach(function(ms){ setTimeout(repaintReader, ms); });
+    }
+    window.addEventListener('orientationchange', scheduleRepaint);
+    window.addEventListener('resize', function(){
+      clearTimeout(_repaintTid);
+      _repaintTid = setTimeout(repaintReader, 250);
+    });
+    if(window.visualViewport){
+      window.visualViewport.addEventListener('resize', function(){
+        clearTimeout(_repaintTid);
+        _repaintTid = setTimeout(repaintReader, 250);
+      });
+    }
   }
 })();
 </script>
@@ -6324,6 +6354,9 @@ body.dark .mushaf-splitter-grip{background:#60a5fa;opacity:.7;}
    anything opened from the reader still works. Global on purpose -- the
    older reading-open freeze rules only apply up to 700px wide, and an
    iPhone in landscape is wider than that. */
+/* The reading overlay must always span the full *visible* height (dvh), not
+   just 100vh/inset:0, so a rotation can't leave it shorter than the screen. */
+#pageContentModal.open{height:100vh;height:100dvh;}
 body.reading-open .main > :not(.modal-overlay):not(.side-panel-overlay),
 body.reading-open .sidebar{visibility:hidden !important;}
 body.reading-open,
