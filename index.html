@@ -2674,14 +2674,40 @@ function drawHighlightStrips(wrap, selector, cls){
   const rows=new Map();
   words.forEach(w=>{ const line=w.closest('.mushaf-line'); if(!line) return; if(!rows.has(line)) rows.set(line,[]); rows.get(line).push(w); });
   rows.forEach((ws,line)=>{
+    /* Horizontal extent. A strip that starts or ends at the edge of the line is
+       pinned to that edge with CSS (left:0 / right:0) instead of a measured
+       pixel value, so it can never come out short when the line is re-laid-out
+       after it was drawn (rotation, landscape text-fit, font swap on iPhone).
+       Only the inner edge, where the ayah begins or ends mid-line, is measured,
+       and it is measured from real rects (not offsetLeft) so transforms and
+       scrolled lines don't skew it. */
+    const items=[...line.children].filter(c=>c.classList && c.classList.contains('mushaf-word'));
+    const isOn=el=>ws.indexOf(el)!==-1;
+    const first=items[0], last=items[items.length-1];
+    const lastReal=(last && last.classList.contains('ayah-marker') && items.length>1)?items[items.length-2]:last;
+    const toRight=!!first && isOn(first);                       /* RTL: first item sits at the right edge */
+    const toLeft =!!last && (isOn(last) || (last!==lastReal && isOn(lastReal)));
+    const lr=line.getBoundingClientRect();
+    const sc=(line.offsetWidth && lr.width)?(lr.width/line.offsetWidth):1;
+    const sl=line.scrollLeft||0;
     let l=Infinity,r=-Infinity,t=Infinity,b=-Infinity;
-    ws.forEach(w=>{const wl=w.offsetLeft,wt=w.offsetTop,ww=w.offsetWidth,wh=w.offsetHeight;l=Math.min(l,wl);r=Math.max(r,wl+ww);t=Math.min(t,wt);b=Math.max(b,wt+wh);});
+    ws.forEach(w=>{
+      const wr=w.getBoundingClientRect();
+      const wl=(wr.left-lr.left)/sc+sl, wrr=(wr.right-lr.left)/sc+sl;
+      l=Math.min(l,wl); r=Math.max(r,wrr);
+      t=Math.min(t,w.offsetTop); b=Math.max(b,w.offsetTop+w.offsetHeight);
+    });
     const d=document.createElement('div');
     d.className=cls;
-    d.style.left=(l-3)+'px';
     d.style.top=(t-1)+'px';
-    d.style.width=(r-l+6)+'px';
     d.style.height=(b-t+2)+'px';
+    if(toLeft){ d.style.left='0px'; } else { d.style.left=(l-3)+'px'; }
+    if(toRight){ d.style.right='0px'; }
+    else{
+      const lw=line.offsetWidth||(lr.width/sc);
+      if(toLeft){ d.style.right=(lw-(r+3))+'px'; }
+      else{ d.style.width=(r-l+6)+'px'; }
+    }
     line.appendChild(d);
   });
 }
