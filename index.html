@@ -2705,6 +2705,35 @@ window.addEventListener('resize', ()=>{
   }, 120);
 });
 
+// Keep the green strips glued to the words whenever the real layout changes.
+// The strips are absolutely positioned from word offsets, so if they are drawn
+// a moment before the final layout (rotation to landscape on iPhone, the
+// landscape text-fit changing the font size, a webfont swapping in) they stay
+// at the old size and cover only part of the ayah. Redraw after every such
+// change instead of relying on a single timed pass.
+(function(){
+  let _tid=null;
+  function redrawStrips(){
+    const wrap=document.querySelector('.mushaf-page-wrap');
+    if(!wrap) return;
+    try{ drawAyahHighlight(wrap); drawAyahHover(wrap); }catch(e){}
+  }
+  function schedule(delay){
+    clearTimeout(_tid);
+    _tid=setTimeout(()=>requestAnimationFrame(redrawStrips), delay==null?60:delay);
+  }
+  window.redrawAyahStrips=schedule;
+  const body=document.getElementById('pageModalBody');
+  if(body && 'ResizeObserver' in window){
+    /* Fires after layout, with the final size -- unlike a resize event, which
+       iOS can send before the rotation has finished laying the page out. */
+    try{ new ResizeObserver(()=>schedule(60)).observe(body); }catch(e){}
+  }
+  window.addEventListener('orientationchange', ()=>{ [150,500,1000].forEach(ms=>schedule(ms)); });
+  if(window.visualViewport) window.visualViewport.addEventListener('resize', ()=>schedule(120));
+  if(document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', ()=>schedule(30));
+})();
+
 // Ayah-level hover: hovering any word highlights the whole ayah it belongs to,
 // making it clear that the selection is the verse (not an individual word).
 document.addEventListener('mouseover', e=>{
